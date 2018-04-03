@@ -39,3 +39,22 @@ sf::Vector2i charToDir(std::string str) {
 
 	return direction;
 }
+
+struct outMsg {
+	std::string msg;
+	float timeLastSend;
+
+	outMsg(std::string txt) {
+		timeLastSend = 0;
+		msg = txt;
+	}
+
+	bool hasToResend(float delta,float waitTime) {
+		waitTime += delta;
+		if (timeLastSend>=waitTime) {
+			timeLastSend -= waitTime;
+			return true;
+		}
+		return false;
+	}
+};

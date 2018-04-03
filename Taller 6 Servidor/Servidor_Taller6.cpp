@@ -5,6 +5,7 @@
 #include <mutex>
 #include <string>
 #include <map>
+#include <queue>
 
 #define MSG_LENGTH 128
 std::mutex mu;
@@ -41,23 +42,48 @@ public:
 	ClientProxy() {};
 };
 
-void myReceiveFunction(sf::UdpSocket *sock, std::map<Address, ClientProxy> *clients) {
-	bool open = true;
+struct outMsg {
+	std::string msg;
+	float timeLastSend;
+	Address address;
+
+	outMsg(std::string txt, Address ad) {
+		timeLastSend = 0;
+		address = ad;
+		msg = txt;
+	}
+
+	bool hasToResend(float delta, float waitTime) {
+		waitTime += delta;
+		if (timeLastSend >= waitTime) {
+			timeLastSend -= waitTime;
+			return true;
+		}
+		return false;
+	}
+};
+
+void myReceiveFunction(sf::UdpSocket *sock, std::map<Address, ClientProxy> *clients,std::queue<std::string>* msgList ,bool* open) {
+	//bool open = true;
 	char data[MSG_LENGTH];
 	std::size_t received;
 	Address addr;
 	while (open) {
-		if (clients->size() == 0) {//aixo era momentani --------------------------------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+		/*if (clients->size() == 0) {//aixo era momentani --------------------------------------------------<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 			open = false; 
 			continue;
-		}
+		}*/
 		if (sock->receive(data, MSG_LENGTH, received, addr.ip, addr.port) != sf::Socket::Done) {
 			//error al recivir
 			std::cout << "error al recivir" << std::endl;
 		}
 		else {
 			//procesar el mensaje
-
+			data[received] = '\0';
+			mu.lock();
+			std::cout << data;
+			msgList->emplace(data);
+			mu.unlock();
 			//if (data == disconnect and clients.size() == 0) open =false;
 		}
 		
@@ -78,10 +104,18 @@ int main() {
 	}
 	//else...
 	
-	myThread = std::thread(&myReceiveFunction, &socket, &clients); //abrimos el therad para el receive
+	bool open=true;
+	std::queue<std::string> clientMessages;
+
+
+	myThread = std::thread(&myReceiveFunction, &socket, &clients,&open); //abrimos el therad para el receive
+
+
 
 	//aqui iría el bucle del juego
+	while (open) {
 
+	}
 
 	
 
