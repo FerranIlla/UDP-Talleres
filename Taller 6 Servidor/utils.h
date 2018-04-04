@@ -40,8 +40,22 @@ sf::Vector2i charToDir(std::string str) {
 	return direction;
 }
 
+struct Address {
+	sf::IpAddress ip;
+	unsigned short port;
+
+	friend bool operator< (const Address &lho, const Address &rho) {
+		if (lho.ip < rho.ip) return true;
+		else if (lho.ip == rho.ip) {
+			if (lho.port < rho.port) return true;
+		}
+		return false;
+	}
+};
+
 struct outMsg {
 	std::string msg;
+	Address to;
 	float timeLastSend;
 
 	outMsg(std::string txt) {
@@ -49,9 +63,9 @@ struct outMsg {
 		msg = txt;
 	}
 
-	bool hasToResend(float delta,float waitTime) {
+	bool hasToResend(float delta, float waitTime) {
 		waitTime += delta;
-		if (timeLastSend>=waitTime) {
+		if (timeLastSend >= waitTime) {
 			timeLastSend -= waitTime;
 			return true;
 		}
@@ -59,6 +73,6 @@ struct outMsg {
 	}
 };
 
-enum TypeOfMessage :int8_t{
+enum TypeOfMessage :int8_t {
 	Hello, NewPlayer, Ack
 };
