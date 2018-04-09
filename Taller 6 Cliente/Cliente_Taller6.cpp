@@ -12,7 +12,7 @@
 
 #define MaxDataRecived 100
 #define ServerAdress "127.0.0.1"
-#define ResendTime 250
+#define ResendTime sf::milliseconds(250)
 std::mutex mu;
 
 void sendNew (std::string s, sf::UdpSocket* socket, int &id, std::map<int, outMsg>* outMessages) {
@@ -41,7 +41,7 @@ void reSend(outMsg msg, sf::UdpSocket* socket) {
 }
 
 void sendNormal(std::string msg, sf::UdpSocket* socket) {
-	if (socket->send(msg.c_str(), msg.length, ServerAdress, 50000) != sf::Socket::Done) {
+	if (socket->send(msg.c_str(), msg.length(), ServerAdress, 50000) != sf::Socket::Done) {
 		std::cout << "Ha habido un problema al enviar\n";
 	}
 }
@@ -54,8 +54,9 @@ void receive(sf::UdpSocket* socket,std::queue<std::string>* msgList, sf::RenderW
 	while (window->isOpen()){
 		if (socket->receive(data, MaxDataRecived, received, adress, port)==sf::Socket::Done) {
 			if (adress == ServerAdress) {
+				data[received] = '\0';
 				mu.lock();
-				std::cout << "Recivido: " << data << std::endl;
+				//std::cout << "Recivido: " << data << std::endl;
 				msgList->emplace(data);
 				mu.unlock();
 			}
@@ -89,7 +90,7 @@ int main() {
 	sf::UdpSocket socket;
 	int msgId = 0;
 	
-	float timeLastResend = 0;
+	
 
 	
 	std::cout << "Introduce un nickname:\n	";
@@ -101,20 +102,23 @@ int main() {
 	//gameplay______________________________________________________________________________________________
 	Map mapa(window.getSize(), sf::Vector2i(8,6));
 	std::map <int, Player*>players;
-	sf::Time timer;
-	INT32 deltaTime;
-	INT32 lastFrameTime=timer.asMilliseconds();
+	sf::Clock timer;
+	sf::Time deltaTime;
+	sf::Time lastFrameTime = sf::milliseconds(0);
+	sf::Time timeLastResend = sf::milliseconds(0);
+
 	int myId;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
 	while (window.isOpen()) {
-		deltaTime = timer.asMilliseconds() - lastFrameTime;
+		deltaTime = timer.restart() - lastFrameTime;
 #pragma region  Input
 		sf::Event evento;
 		while (window.pollEvent(evento)) {
 			switch (evento.type) {
 			case sf::Event::Closed:
+				sendNormal(std::to_string(TypeOfMessage::Disconnect), &socket);
 				window.close();
 				break;
 			case sf::Event::MouseMoved:
@@ -142,13 +146,15 @@ int main() {
 			mu.lock();
 			std::vector<std::string> words = commandToWords(serverMessages.front());
 			mu.unlock();
-			if (std::stoi(words[0]) == TypeOfMessage::Ack) {
+			TypeOfMessage type = (TypeOfMessage)std::stoi(words[0]);
+			if (type== TypeOfMessage::Ack) {
 				outMessages.erase(std::stoi(words[1]));
 			}
-			else if (std::stoi(words[0]) == TypeOfMessage::Ping) {
+			else if (type == TypeOfMessage::Ping) {
+				std::cout << "Ping Recivido";
 				sendNormal(std::to_string(TypeOfMessage::Ping), &socket);
 			}
-			else if (std::stoi(words[0]) == TypeOfMessage::NewPlayer) {
+			else if (type == TypeOfMessage::NewPlayer) {
 				std::cout << "Otro player conectado\n";
 				int id = std::stoi(words[2]);
 				if (players.find(id) == players.end()) {
@@ -160,7 +166,7 @@ int main() {
 					sendAck(std::stoi(words[1]), &socket);
 				}
 			}
-			else if (std::stoi(words[0]) == TypeOfMessage::Disconnect) {
+			else if (type == TypeOfMessage::Disconnect) {
 				if (std::stoi(words[1]) == myId) {
 					std::cout << "Has sido desconectado\n";
 				}
@@ -168,7 +174,7 @@ int main() {
 					players.erase(std::stoi(words[1]));
 				}
 			}
-			else if (std::stoi(words[0])==TypeOfMessage::Hello) {
+			else if (std::stoi(words[0]) ==TypeOfMessage::Hello) {
 				std::cout << "Welcome recivido\n";
 					myId = std::stoi(words[1]);
 					Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), mapa.getRectSize(), myId);
@@ -204,5 +210,7 @@ int main() {
 
 		
 	}
+	players.clear();
+	thread.join();
 
 }

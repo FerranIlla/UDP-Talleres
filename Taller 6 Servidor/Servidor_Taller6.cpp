@@ -9,10 +9,10 @@
 #include "utils.h"
 #include "Mapa.h"
 
-#define MSG_LENGTH 128
-#define ResendTime 250
-#define PingTime 1000
-#define DisconnectTime 3000
+#define MSG_LENGTH 512
+#define ResendTime sf::milliseconds(150)
+#define PingTime sf::milliseconds(1000)
+#define DisconnectTime sf::milliseconds(5000)
 std::mutex mu;
 
 
@@ -31,7 +31,7 @@ public:
 	std::string nickname;
 	Position pos;
 	Address address; //suposo que no cal perque hi ha el map
-	float timeSincePing;
+	sf::Time timeSincePing;
 	int id;
 
 	ClientProxy(Map* map, Address ad, std::string name, int idPlayer) {
@@ -39,16 +39,17 @@ public:
 		pos.y = rand() % map->getSize().y;
 		address = ad;
 		nickname = name;
-		timeSincePing = 0.f;
+		timeSincePing = sf::milliseconds(0);
 		id = idPlayer;
 	};
 
 	void resetPing() {
-		timeSincePing -= PingTime;
+		timeSincePing =sf::milliseconds(0);
 	}
 
-	bool isDisconected() {
-		return timeSincePing < DisconnectTime;
+	bool isDisconected(sf::Time deltaTime) {
+		timeSincePing += deltaTime;
+		return timeSincePing > DisconnectTime;
 	}
 };
 
@@ -79,7 +80,7 @@ void myReceiveFunction(sf::UdpSocket *sock, std::map<Address, ClientProxy> *clie
 			std::string s = data;
 			InMsg msg(s, addr);
 			mu.lock();
-			std::cout << data;
+			//std::cout << data;
 			msgList->push(msg);
 			mu.unlock();
 		}
@@ -128,12 +129,12 @@ int main() {
 		return 0;
 	}
 
-	sf::Time timer;
-	INT32 deltaTime;
-	INT32 lastFrameTime = timer.asMilliseconds();
+	sf::Clock timer;
+	sf::Time deltaTime;
+	sf::Time lastFrameTime = sf::milliseconds(0);
 	
-	float timeLastResend=0;
-	float timeLastPing = 0;
+	sf::Time timeLastResend= sf::milliseconds(0);
+	sf::Time timeLastPing = sf::milliseconds(0);
 
 	bool open=true;
 	myThread = std::thread(&myReceiveFunction, &socket, &clients,&msgList,&open); //abrimos el thread para el receive
@@ -142,21 +143,31 @@ int main() {
 
 	//aqui iría el bucle del juego
 	while (open) {
-		deltaTime = timer.asMilliseconds() - lastFrameTime;
+		deltaTime = timer.restart() - lastFrameTime;
 #pragma region Received Messages
-		while (!msgList.empty()) {
+		bool msgOnList = !msgList.empty();
+		while (msgOnList) {
 			mu.lock();
 			InMsg msg = msgList.front();
 			mu.unlock();
 			std::vector<std::string> words = commandToWords(msg.msg);
 		#pragma region Existing Client
 			if (clients.find(msg.addr) != clients.end()) {
-				if (std::stoi(words[0]) == TypeOfMessage::Ack) {
+				TypeOfMessage type =(TypeOfMessage) std::stoi(words[0]);
+				if (type == TypeOfMessage::Ack) {
 					outMessages.erase(std::stoi(words[1])); //borramos el mensaje de los outs
 				}
-				else if (std::stoi(words[0]) == TypeOfMessage::Ping) {
-					clients[msg.addr].resetPing();
+				else if (type == TypeOfMessage::Ping) {
+					clients.find(msg.addr)->second.resetPing();
 				}
+				else if (type == TypeOfMessage::Disconnect) {
+					clients.erase(msg.addr);
+				}
+				else if (type == TypeOfMessage::Hello) {
+					std::string s = std::to_string(TypeOfMessage::Hello) + "_" + std::to_string(clients.find(msg.addr)->second.id) + "_" + std::to_string(clients.find(msg.addr)->second.pos.x) + "_" + std::to_string((clients.find(msg.addr)->second.pos.y));
+					sendNormal(s, &socket, msg.addr);
+				}
+				//to do responder a un hello que ya tenemos
 			}
 		#pragma endregion
 		#pragma region Non Existing Client
@@ -177,7 +188,10 @@ int main() {
 				}
 			}
 		#pragma endregion
+			mu.lock();
 			msgList.pop();
+			msgOnList = !msgList.empty();
+			mu.unlock();
 		}
 #pragma endregion
 #pragma region Resend
@@ -187,26 +201,33 @@ int main() {
 			for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
 				reSend(it->second, &socket, it->second.to.ip.toString(), it->second.to.port);
 			}
-			timeLastResend - ResendTime;
+			timeLastResend -= ResendTime;
 		}
 #pragma endregion
 #pragma region Ping
 		timeLastPing += deltaTime;
 		if (timeLastPing > PingTime) {
-			for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
+			//std::cout << "Enviando Ping\n";
+			for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 				std::string msg = std::to_string(TypeOfMessage::Ping);
-				sendNormal(msg,&socket,it->second.to);
+				sendNormal(msg,&socket,it->first);
 			}
+			timeLastPing -= PingTime;
 		}
 
-		for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-			if ((*it).second.isDisconected()) {
+		for (std::map<Address, ClientProxy >::iterator it = clients.begin(); it != clients.end(); ) {
+			if ((*it).second.isDisconected(deltaTime)) {
+				std::cout << "Jugador expulsado\n";
+				std::string msg = std::to_string(Disconnect);
+				msg = msg + "_" + std::to_string((*it).second.id);
+				clients.erase(it++);
 				for (std::map<Address, ClientProxy>::iterator itB = clients.begin(); itB != clients.end(); ++itB) {
-					std::string msg = std::to_string(Disconnect);
-					msg = msg + "_" + std::to_string((*itB).second.id);
 					sendNew(msg,&socket,idOutMsg,(*itB).second.address,&outMessages);
 				}
-				clients.erase((*it).first);
+				
+			}
+			else {
+				++it;
 			}
 		}
 #pragma endregion
