@@ -11,10 +11,9 @@
 
 #define MSG_LENGTH 128
 #define ResendTime 250
+#define PingTime 1000
+#define DisconnectTime 3000
 std::mutex mu;
-std::mutex muOut;
-
-
 
 
 struct Position {
@@ -32,7 +31,7 @@ public:
 	std::string nickname;
 	Position pos;
 	Address address; //suposo que no cal perque hi ha el map
-	float timeSinceAction;
+	float timeSincePing;
 	int id;
 
 	ClientProxy(Map* map, Address ad, std::string name, int idPlayer) {
@@ -40,9 +39,17 @@ public:
 		pos.y = rand() % map->getSize().y;
 		address = ad;
 		nickname = name;
-		timeSinceAction = 0.f;
+		timeSincePing = 0.f;
 		id = idPlayer;
 	};
+
+	void resetPing() {
+		timeSincePing -= PingTime;
+	}
+
+	bool isDisconected() {
+		return timeSincePing < DisconnectTime;
+	}
 };
 
 struct InMsg {
@@ -87,9 +94,7 @@ void sendNew(std::string s, sf::UdpSocket* socket, int &id,Address addr, std::ma
 	else {
 		outMsg msg(s);
 		msg.to = addr;
-		muOut.lock();
 		outMessages->emplace(id, msg);
-		muOut.unlock();
 		id++;
 	}
 	//socket->send()
@@ -107,8 +112,9 @@ void sendNormal(std::string msg, sf::UdpSocket* socket, Address addr) {
 	}
 }
 
-int main() {
 
+
+int main() {
 	sf::UdpSocket socket;
 	std::map<Address, ClientProxy> clients;
 	std::thread myThread;
@@ -121,12 +127,14 @@ int main() {
 		std::cout << "No se puede vincular al puerto 50000.\n";
 		return 0;
 	}
-	//else...
 
 	sf::Time timer;
 	INT32 deltaTime;
 	INT32 lastFrameTime = timer.asMilliseconds();
 	
+	float timeLastResend=0;
+	float timeLastPing = 0;
+
 	bool open=true;
 	myThread = std::thread(&myReceiveFunction, &socket, &clients,&msgList,&open); //abrimos el thread para el receive
 
@@ -135,18 +143,23 @@ int main() {
 	//aqui iría el bucle del juego
 	while (open) {
 		deltaTime = timer.asMilliseconds() - lastFrameTime;
-		mu.lock();
+#pragma region Received Messages
 		while (!msgList.empty()) {
+			mu.lock();
 			InMsg msg = msgList.front();
+			mu.unlock();
 			std::vector<std::string> words = commandToWords(msg.msg);
-			if (clients.find(msg.addr) != clients.end()) { //si el cliente existe
-				/*if (std::stoi(words[0]) == TypeOfMessage::Hello) {
-					
-				}*/
+		#pragma region Existing Client
+			if (clients.find(msg.addr) != clients.end()) {
 				if (std::stoi(words[0]) == TypeOfMessage::Ack) {
 					outMessages.erase(std::stoi(words[1])); //borramos el mensaje de los outs
 				}
+				if (std::stoi(words[0]) == TypeOfMessage::Ping) {
+					clients[msg.addr].resetPing();
+				}
 			}
+		#pragma endregion
+		#pragma region Non Existing Client
 			else {//si no existe el cliente
 				if (std::stoi(words[0]) == TypeOfMessage::Hello) {
 					ClientProxy newClient(&mapa, msg.addr, msg.msg, clients.size());
@@ -163,24 +176,43 @@ int main() {
 					clients.emplace(msg.addr, newClient);
 				}
 			}
+		#pragma endregion
 			msgList.pop();
 		}
-		mu.unlock();
-
+#pragma endregion
+#pragma region Resend
 		//reenviar mensajes
-		muOut.lock();
-		for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
-			if (it->second.hasToResend(deltaTime, ResendTime)) {
-				reSend(it->second, &socket, it->second.to.ip.toString(),it->second.to.port);
+		timeLastResend += deltaTime;
+		if (timeLastResend > ResendTime) {
+			for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
+				reSend(it->second, &socket, it->second.to.ip.toString(), it->second.to.port);
+			}
+			timeLastResend - ResendTime;
+		}
+#pragma endregion
+#pragma region Ping
+		timeLastPing += deltaTime;
+		if (timeLastPing > PingTime) {
+			for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
+				std::string msg = std::to_string(TypeOfMessage::Ping);
+				sendNormal(msg,&socket,it->second.to);
 			}
 		}
-		muOut.unlock();
 
+		for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+			if ((*it).second.isDisconected()) {
+				for (std::map<Address, ClientProxy>::iterator itB = clients.begin(); itB != clients.end(); ++itB) {
+					std::string msg = std::to_string(Disconnect);
+					msg = msg + "_" + std::to_string((*itB).second.id);
+					sendNew(msg,&socket,idOutMsg,(*itB).second.address,&outMessages);
+				}
+				clients.erase((*it).first);
+			}
+		}
+#pragma endregion
 	}
 
-	
 
-	
 	std::cout << "menaje final del programa\n";
 	myThread.join();
 	

@@ -83,10 +83,10 @@ int main() {
 	sf::UdpSocket socket;
 	int msgId = 0;
 	
-	//sendNew("Hi_" + std::to_string(randomId), &socket, randomId, &outMessages);
+	float timeLastResend = 0;
+
 	
 	std::cout << "Introduce un nickname:\n	";
-
 	std::string playerNick;
 	std::cin >> playerNick;
 	sendNew(std::to_string(TypeOfMessage::Hello)+"_"+std::to_string(msgId)+"_"+playerNick,&socket,msgId,&outMessages);
@@ -161,10 +161,12 @@ int main() {
 #pragma endregion
 
 #pragma region CheckearReenvio de mensajes
-		for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
-			if (it->second.hasToResend(deltaTime,ResendTime)) {
+		timeLastResend += deltaTime;
+		if (timeLastResend>ResendTime) {
+			for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
 				reSend(it->second, &socket);
 			}
+			timeLastResend -= ResendTime;
 		}
 #pragma endregion
 
