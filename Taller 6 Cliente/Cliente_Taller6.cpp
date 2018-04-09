@@ -40,6 +40,12 @@ void reSend(outMsg msg, sf::UdpSocket* socket) {
 	}
 }
 
+void sendNormal(std::string msg, sf::UdpSocket* socket) {
+	if (socket->send(msg.c_str(), msg.length, ServerAdress, 50000) != sf::Socket::Done) {
+		std::cout << "Ha habido un problema al enviar\n";
+	}
+}
+
 void receive(sf::UdpSocket* socket,std::queue<std::string>* msgList, sf::RenderWindow* window){
 	char data[MaxDataRecived];
 	sf::IpAddress adress;
@@ -109,6 +115,7 @@ int main() {
 		while (window.pollEvent(evento)) {
 			switch (evento.type) {
 			case sf::Event::Closed:
+				window.close();
 				break;
 			case sf::Event::MouseMoved:
 				break;
@@ -130,12 +137,18 @@ int main() {
 #pragma endregion
 
 #pragma region Mensajes recibidos
-		mu.lock();
+		
 		while (!serverMessages.empty()) {
-			
+			mu.lock();
 			std::vector<std::string> words = commandToWords(serverMessages.front());
-			
-			if (std::stoi(words[0]) == TypeOfMessage::NewPlayer) {
+			mu.unlock();
+			if (std::stoi(words[0]) == TypeOfMessage::Ack) {
+				outMessages.erase(std::stoi(words[1]));
+			}
+			else if (std::stoi(words[0]) == TypeOfMessage::Ping) {
+				sendNormal(std::to_string(TypeOfMessage::Ping), &socket);
+			}
+			else if (std::stoi(words[0]) == TypeOfMessage::NewPlayer) {
 				std::cout << "Otro player conectado\n";
 				int id = std::stoi(words[2]);
 				if (players.find(id) == players.end()) {
@@ -145,6 +158,14 @@ int main() {
 				}
 				else {
 					sendAck(std::stoi(words[1]), &socket);
+				}
+			}
+			else if (std::stoi(words[0]) == TypeOfMessage::Disconnect) {
+				if (std::stoi(words[1]) == myId) {
+					std::cout << "Has sido desconectado\n";
+				}
+				else {
+					players.erase(std::stoi(words[1]));
 				}
 			}
 			else if (std::stoi(words[0])==TypeOfMessage::Hello) {
@@ -157,7 +178,7 @@ int main() {
 			}
 			serverMessages.pop();
 		}
-		mu.unlock();
+		
 #pragma endregion
 
 #pragma region CheckearReenvio de mensajes

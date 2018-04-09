@@ -154,7 +154,7 @@ int main() {
 				if (std::stoi(words[0]) == TypeOfMessage::Ack) {
 					outMessages.erase(std::stoi(words[1])); //borramos el mensaje de los outs
 				}
-				if (std::stoi(words[0]) == TypeOfMessage::Ping) {
+				else if (std::stoi(words[0]) == TypeOfMessage::Ping) {
 					clients[msg.addr].resetPing();
 				}
 			}

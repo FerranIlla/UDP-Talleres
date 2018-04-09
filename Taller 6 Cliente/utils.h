@@ -60,5 +60,5 @@ struct outMsg {
 };
 
 enum TypeOfMessage :int8_t{
-	Hello, NewPlayer, Ack
+	Hello, NewPlayer, Ack, Ping, Disconnect
 };
