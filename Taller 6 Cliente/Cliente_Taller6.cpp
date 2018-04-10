@@ -13,16 +13,18 @@
 #define MaxDataRecived 100
 #define ServerAdress "127.0.0.1"
 #define ResendTime sf::milliseconds(250)
+#define MaxIdMsg 255
+
 std::mutex mu;
 
-void sendNew (std::string s, sf::UdpSocket* socket, int &id, std::map<int, outMsg>* outMessages) {
+void sendNew(std::string s, sf::UdpSocket* socket, int &id, std::map<int, outMsg>* outMessages) {
 	if (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done) {
 		std::cout << "Ha habido un problema al enviar\n";
 	}
 	else {
 		outMsg msg(s);
-		outMessages->emplace(id,msg);
-		id++;
+		outMessages->emplace(id, msg);
+		id = (id + 1) % MaxIdMsg;
 	}
 	//socket->send()
 }
@@ -35,6 +37,7 @@ void sendAck(int id, sf::UdpSocket* socket) {
 }
 
 void reSend(outMsg msg, sf::UdpSocket* socket) {
+	std::cout << "reenvio";
 	if (socket->send(&msg.msg[0], msg.msg.length(), ServerAdress, 50000) != sf::Socket::Done) {
 		std::cout << "Ha habido un problema al enviar\n";
 	}
@@ -46,13 +49,13 @@ void sendNormal(std::string msg, sf::UdpSocket* socket) {
 	}
 }
 
-void receive(sf::UdpSocket* socket,std::queue<std::string>* msgList, sf::RenderWindow* window){
+void receive(sf::UdpSocket* socket, std::queue<std::string>* msgList, sf::RenderWindow* window) {
 	char data[MaxDataRecived];
 	sf::IpAddress adress;
 	unsigned short port;
 	std::size_t received;
-	while (window->isOpen()){
-		if (socket->receive(data, MaxDataRecived, received, adress, port)==sf::Socket::Done) {
+	while (window->isOpen()) {
+		if (socket->receive(data, MaxDataRecived, received, adress, port) == sf::Socket::Done) {
 			if (adress == ServerAdress) {
 				data[received] = '\0';
 				mu.lock();
@@ -89,18 +92,18 @@ int main() {
 	//socketudp
 	sf::UdpSocket socket;
 	int msgId = 0;
-	
-	
 
-	
+
+
+
 	std::cout << "Introduce un nickname:\n	";
 	std::string playerNick;
 	std::cin >> playerNick;
-	sendNew(std::to_string(TypeOfMessage::Hello)+"_"+std::to_string(msgId)+"_"+playerNick,&socket,msgId,&outMessages);
+	sendNew(std::to_string(TypeOfMessage::Hello) + "_" + playerNick, &socket, msgId, &outMessages);
 	std::cout << "nick enviado al servidor\n";
 
 	//gameplay______________________________________________________________________________________________
-	Map mapa(window.getSize(), sf::Vector2i(8,6));
+	Map mapa(window.getSize(), sf::Vector2i(8, 6));
 	std::map <int, Player*>players;
 	sf::Clock timer;
 	sf::Time deltaTime;
@@ -141,17 +144,17 @@ int main() {
 #pragma endregion
 
 #pragma region Mensajes recibidos
-		
+
 		while (!serverMessages.empty()) {
 			mu.lock();
 			std::vector<std::string> words = commandToWords(serverMessages.front());
 			mu.unlock();
 			TypeOfMessage type = (TypeOfMessage)std::stoi(words[0]);
-			if (type== TypeOfMessage::Ack) {
+			if (type == TypeOfMessage::Ack) {
 				outMessages.erase(std::stoi(words[1]));
 			}
 			else if (type == TypeOfMessage::Ping) {
-				std::cout << "Ping Recivido";
+				//std::cout << "Ping Recivido";
 				sendNormal(std::to_string(TypeOfMessage::Ping), &socket);
 			}
 			else if (type == TypeOfMessage::NewPlayer) {
@@ -172,19 +175,20 @@ int main() {
 				}
 				else {
 					players.erase(std::stoi(words[1]));
+					sendAck(std::stoi(words[2]), &socket);
 				}
 			}
-			else if (std::stoi(words[0]) ==TypeOfMessage::Hello) {
+			else if (std::stoi(words[0]) == TypeOfMessage::Hello) {
 				std::cout << "Welcome recivido\n";
-					myId = std::stoi(words[1]);
-					Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), mapa.getRectSize(), myId);
-					players.emplace(myId, player);
-					outMessages.erase(0); //borramos el Hello
-				
+				myId = std::stoi(words[1]);
+				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), mapa.getRectSize(), myId);
+				players.emplace(myId, player);
+				outMessages.erase(0); //borramos el Hello
+
 			}
 			serverMessages.pop();
 		}
-		
+
 #pragma endregion
 
 #pragma region CheckearReenvio de mensajes
@@ -208,7 +212,7 @@ int main() {
 		window.clear();
 #pragma endregion
 
-		
+
 	}
 	players.clear();
 	thread.join();
