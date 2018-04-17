@@ -2,13 +2,13 @@
 #include <SFML\Graphics.hpp>
 #include <list>
 #include <iostream>
-class Map {
+#include <Mapa.h>
+class ClientMap:Map {
 private:
 	std::list<sf::RectangleShape*> lines;
-	sf::Vector2f rectSize;
-	sf::Vector2i size;
+	sf::CircleShape food;
 public:
-	Map(sf::Vector2u,sf::Vector2i);
+	ClientMap(sf::Vector2u,sf::Vector2i):;
 	void draw(sf::RenderWindow*);
 	sf::Vector2i getSize();
 	sf::Vector2f getRectSize();

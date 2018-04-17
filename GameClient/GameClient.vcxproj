@@ -155,11 +155,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cliente_Taller6.cpp" />
-    <ClCompile Include="Mapa.cpp" />
+    <ClCompile Include="ClientMap.cpp" />
     <ClCompile Include="player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Mapa.h" />
+    <ClInclude Include="ClientMap.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="playerBase.h" />
     <ClInclude Include="utils.h" />

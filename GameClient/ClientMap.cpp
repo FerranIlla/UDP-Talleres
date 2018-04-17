@@ -1,10 +1,8 @@
-#include "Mapa.h"
+#include "ClientMap.h"
 
- Map::Map(sf::Vector2u screenS,sf::Vector2i s) {
+ ClientMap::ClientMap(sf::Vector2u screenS,sf::Vector2i s) {
 	sf::Vector2u screenSize = screenS;
 	size = s;
-	rectSize = sf::Vector2f(screenSize.x /(float)size.x, screenSize.y / (float)size.y);
-
 	for (int i = 0; i < size.x; i++) {
 		sf::RectangleShape* line = new sf::RectangleShape(sf::Vector2f(5, screenSize.y));
 		line->setPosition(rectSize.x*i,0);
@@ -25,17 +23,17 @@
 	lines.push_back(FinalLine);
 }
 
-void Map::draw(sf::RenderWindow* window) {
+void ClientMap::draw(sf::RenderWindow* window) {
 	for (std::list<sf::RectangleShape*>::iterator it = lines.begin(); it != lines.end(); ++it) {
 		window->draw(**it);
 	}
 
 }
 
-sf::Vector2i Map::getSize() {
+sf::Vector2i ClientMap::getSize() {
 	return size;
 }
 
-sf::Vector2f Map::getRectSize() {
+sf::Vector2f ClientMap::getRectSize() {
 	return rectSize;
 }
