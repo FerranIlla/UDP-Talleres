@@ -2,7 +2,7 @@
 #include <SFML\Graphics.hpp>
 
 class Map {
-private:
+protected:
 	sf::Vector2i size;
 	sf::Vector2i foodPos;
 public: 
