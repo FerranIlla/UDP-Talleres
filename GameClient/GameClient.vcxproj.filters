@@ -32,9 +32,6 @@
     <ClInclude Include="playerBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ClientMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>

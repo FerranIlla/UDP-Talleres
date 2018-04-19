@@ -2,7 +2,9 @@
 #include <SFML\Graphics.hpp>
 #include <list>
 #include <iostream>
-class ServerMap {
+#include <Mapa.h>
+
+class ServerMap:Map {
 private:
 	
 public:

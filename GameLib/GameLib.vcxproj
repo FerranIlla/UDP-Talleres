@@ -144,7 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mapa.h" />
-    <ClInclude Include="PlayerInfo.h" />
+    <ClInclude Include="PlayerBase.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>

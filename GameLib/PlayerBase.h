@@ -1,12 +1,12 @@
 #pragma once
 #include <SFML\Graphics.hpp>
 
-class PlayerInfo
+class PlayerBase
 {
 	std::string name;
 	sf::Vector2i position;
 	int lives;
 public:
-	PlayerInfo();
-	~PlayerInfo();
+	PlayerBase();
+	~PlayerBase();
 };
