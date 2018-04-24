@@ -93,7 +93,17 @@ struct outMsgClient {
 	}
 };
 
+float length(sf::Vector2f vector) {
+	return sqrt(vector.x*vector.x+vector.y*vector.y);
+}
 
+float dotProduct(sf::Vector2f first, sf::Vector2f second) {
+	return first.x*second.x + first.y*second.y;
+}
+
+sf::Vector2f normalize(sf::Vector2f vec) {
+	return vec / length(vec);
+}
 
 enum TypeOfMessage :int8_t {
 	Hello, NewPlayer, Ack, Ping, Disconnect

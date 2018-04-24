@@ -3,10 +3,13 @@
 
 class PlayerBase
 {
+protected:
 	std::string name;
 	sf::Vector2i position;
+	float maxVelocity;
 	int lives;
+	int len;
+	int id;
 public:
-	PlayerBase();
-	~PlayerBase();
+	void setPosition(sf::Vector2i);
 };

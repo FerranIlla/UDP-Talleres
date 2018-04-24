@@ -5,10 +5,11 @@
 #include <queue>
 #include <mutex>
 #include "Mapa.h"
-#include "player.h"
+#include "PlayerClient.h"
 #include "utils.h"
 #include <thread>
 
+typedef outMsgClient outMsg;
 
 #define MaxDataRecived 100
 #define ServerAdress "127.0.0.1"
@@ -103,13 +104,13 @@ int main() {
 	std::cout << "nick enviado al servidor\n";
 
 	//gameplay______________________________________________________________________________________________
-	Map mapa(window.getSize(), sf::Vector2i(8, 6));
+	//Map mapa(window.getSize(), sf::Vector2i(8, 6));
 	std::map <int, Player*>players;
 	sf::Clock timer;
 	sf::Time deltaTime;
 	sf::Time lastFrameTime = sf::milliseconds(0);
 	sf::Time timeLastResend = sf::milliseconds(0);
-
+	sf::Vector2f mousePos(0,0);
 	int myId;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
@@ -125,6 +126,7 @@ int main() {
 				window.close();
 				break;
 			case sf::Event::MouseMoved:
+				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
 				break;
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Return) {
@@ -161,7 +163,7 @@ int main() {
 				std::cout << "Otro player conectado\n";
 				int id = std::stoi(words[2]);
 				if (players.find(id) == players.end()) {
-					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), mapa.getRectSize(), id);
+					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id);
 					players.emplace(id, player);
 					sendAck(std::stoi(words[1]), &socket);
 				}
@@ -181,7 +183,7 @@ int main() {
 			else if (std::stoi(words[0]) == TypeOfMessage::Hello) {
 				std::cout << "Welcome recivido\n";
 				myId = std::stoi(words[1]);
-				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), mapa.getRectSize(), myId);
+				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), 10, myId);
 				players.emplace(myId, player);
 				outMessages.erase(0); //borramos el Hello
 
@@ -200,9 +202,14 @@ int main() {
 			timeLastResend -= ResendTime;
 		}
 #pragma endregion
+#pragma region UpdatePlayers
+		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
+			(*it).second->update(deltaTime.asSeconds());
+		}
+#pragma endregion
 
 #pragma region Draw
-		mapa.draw(&window);
+		//mapa.draw(&window);
 
 		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
 			(*it).second->draw(&window);

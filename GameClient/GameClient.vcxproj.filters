@@ -18,21 +18,18 @@
     <ClCompile Include="Cliente_Taller6.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="player.cpp">
+    <ClCompile Include="ClientMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClientMap.cpp">
+    <ClCompile Include="PlayerClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="playerBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ClientMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
