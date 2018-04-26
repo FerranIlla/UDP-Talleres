@@ -8,4 +8,5 @@ protected:
 public: 
 	Map(sf::Vector2i size);
 	bool isPlayerOutside(sf::Vector2i pos, int radi);
+	sf::Vector2i getSize();
 };

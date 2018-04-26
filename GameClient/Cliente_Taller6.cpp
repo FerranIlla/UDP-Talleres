@@ -5,8 +5,8 @@
 #include <queue>
 #include <mutex>
 #include "Mapa.h"
-#include "PlayerClient.h"
 #include "utils.h"
+#include "PlayerClient.h"
 #include <thread>
 
 typedef outMsgClient outMsg;
@@ -111,7 +111,7 @@ int main() {
 	sf::Time lastFrameTime = sf::milliseconds(0);
 	sf::Time timeLastResend = sf::milliseconds(0);
 	sf::Vector2f mousePos(0,0);
-	int myId;
+	int myId=-1;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
@@ -127,6 +127,8 @@ int main() {
 				break;
 			case sf::Event::MouseMoved:
 				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
+				if(myId!=-1)
+					players.find(myId)->second->setTarget( mousePos);
 				break;
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Return) {
@@ -203,6 +205,7 @@ int main() {
 		}
 #pragma endregion
 #pragma region UpdatePlayers
+		
 		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
 			(*it).second->update(deltaTime.asSeconds());
 		}

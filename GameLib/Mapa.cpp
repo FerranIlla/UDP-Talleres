@@ -1,9 +1,12 @@
 #include "Mapa.h"
 
-Map::Map(sf::Vector2i size):size(size) {
+Map::Map(sf::Vector2i size):size(size){
 	
 }
 bool Map::isPlayerOutside(sf::Vector2i pos, int radi) {
 
 	return false;
+}
+sf::Vector2i Map::getSize() {
+	return size;
 }

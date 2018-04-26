@@ -1,6 +1,6 @@
 #include "ServerMap.h"
 
-ServerMap::ServerMap() {
+ServerMap::ServerMap(sf::Vector2i size):Map(size) {
 	
 }
 

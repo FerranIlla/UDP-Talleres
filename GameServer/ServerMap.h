@@ -4,10 +4,11 @@
 #include <iostream>
 #include <Mapa.h>
 
-class ServerMap:Map {
+class ServerMap:public Map {
 private:
 	
 public:
-	ServerMap();
+	ServerMap(sf::Vector2i);
 	void spawnFood();
+	
 };

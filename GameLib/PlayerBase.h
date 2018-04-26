@@ -5,7 +5,6 @@ class PlayerBase
 {
 protected:
 	std::string name;
-	sf::Vector2i position;
 	float maxVelocity;
 	int lives;
 	int len;

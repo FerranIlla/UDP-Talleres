@@ -7,7 +7,7 @@
 #include <map>
 #include <queue>
 #include "utils.h"
-#include "Mapa.h"
+#include "ServerMap.h"
 
 #define MSG_LENGTH 512
 #define ResendTime sf::milliseconds(150)
@@ -16,6 +16,7 @@
 #define MaxIdMsg 255;
 std::mutex mu;
 
+typedef outMsgServer outMsg;
 
 struct Position {
 	int x, y;
@@ -36,7 +37,7 @@ public:
 	int id;
 	std::map<int, std::string> outMessages;
 
-	ClientProxy(Map* map, Address ad, std::string name, int idPlayer) {
+	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer) {
 		pos.x = rand() % map->getSize().x;
 		pos.y = rand() % map->getSize().y;
 		address = ad;
@@ -152,7 +153,7 @@ int main() {
 	bool open = true;
 	myThread = std::thread(&myReceiveFunction, &receiveSocket, &msgList, &open); //abrimos el thread para el receive
 
-	Map mapa(sf::Vector2i(8, 6));
+	ServerMap mapa(sf::Vector2i(800, 600));
 
 	//aqui iría el bucle del juego
 	while (open) {
