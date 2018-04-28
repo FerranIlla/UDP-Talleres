@@ -6,6 +6,7 @@ class PlayerBase
 protected:
 	std::string name;
 	float maxVelocity;
+	float maxForce;
 	int lives;
 	int len;
 	int id;
