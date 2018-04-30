@@ -128,7 +128,7 @@ int main() {
 			case sf::Event::MouseMoved:
 				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
 				if(myId!=-1)
-					players.find(myId)->second->setTarget( mousePos);
+					players.find(myId)->second->setTarget(mousePos);
 				break;
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Return) {

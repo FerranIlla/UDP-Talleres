@@ -7,7 +7,7 @@ Player::Player(sf::Vector2i position, sf::Color col, float rad,int i) {
 	len = 50;
 	radius = 15;
 	followDistance = 10;
-	maxVelocity = 60;
+	maxVelocity = 200;
 	maxForce = 3;
 	velocity = sf::Vector2f(1.f, 0.f)*maxVelocity;
 	oriLine.setSize(sf::Vector2f(40, 6));
@@ -18,14 +18,14 @@ Player::Player(sf::Vector2i position, sf::Color col, float rad,int i) {
 	sf::CircleShape head = sf::CircleShape(radius);
 	head.setOrigin(radius, radius);
 	head.setPosition(position.x, position.y);
-	head.setFillColor(sf::Color::Red);// col);
+	head.setFillColor(col);
 	body.push_back(head);
 	//body
 	for (int i = 1; i < len; i++) {
 		sf::CircleShape circle(radius);
 		circle.setOrigin(radius, radius);
 		circle.setPosition(position.x, position.y);
-		circle.setFillColor(sf::Color(col.r / 2, col.g / 2, col.b / 2, 1));
+		circle.setFillColor(sf::Color(col.r / 2, col.g / 2, col.b / 2, 255));
 		body.push_back(circle);
 	}
 	id = i;
@@ -37,11 +37,11 @@ void Player::draw(sf::RenderWindow* window) {
 	}
 	window->draw(*body.begin());
 
-	window->draw(oriLine);
+	//window->draw(oriLine);
 }
 
 void Player::setTarget(sf::Vector2f tar) {
-	target = tar - body.begin()->getPosition(); //target direction
+	/*target = tar - body.begin()->getPosition(); //target direction
 	//calcular angulo entre direcciones
 	float cross = velocity.x*target.y - velocity.y*target.x;
 	float dot = velocity.x*target.x + velocity.y*target.y;
@@ -59,73 +59,41 @@ void Player::setTarget(sf::Vector2f tar) {
 		target.y = sin(-maxAngleRad)*velocity.x + cos(-maxAngleRad)*velocity.y;
 	}
 	//normalize target
-	//target = target / sqrt((pow(target.x, 2.f) + pow(target.y, 2.f)));
-
+	//target = target / sqrt((pow(target.x, 2.f) + pow(target.y, 2.f)));*/
+	target = tar;
 	
 }
 
 void Player::update(float delta) {
 	movePlayer(target, delta);
-	//body.begin()->rotate(delta*10);
-	updateOriLine();
+	//updateOriLine();
 }
 
-void Player::movePlayer(sf::Vector2f targetVelocity, float delta) {
-	std::list<sf::CircleShape>::iterator head = body.begin();
-	if (targetVelocity != sf::Vector2f(0,0)) {
-		sf::Vector2f desiredVel = normalize(targetVelocity)*maxVelocity;
-		sf::Vector2f steeringForce = desiredVel - velocity;
-		velocity = velocity + normalize(steeringForce)*maxForce;
-		velocity = normalize(velocity)*maxVelocity;
 
+void Player::movePlayer(sf::Vector2f target, float delta) {
+	sf::Vector2f desiredPos = target;
 
-		//target = normalize(target)*maxVelocity * delta;
-		//maximo de angulo
-		/*std::list<sf::CircleShape>::iterator second = ++body.begin();
-		sf::Vector2f Direction = first->getPosition() - second->getPosition();
-		*/
+	std::list<sf::CircleShape>::iterator it = body.begin();
+    for (std::list<sf::CircleShape>::iterator it = body.begin(); it != body.end(); ++it) {
+		//comprovamos la distancia hasta el target
+		sf::Vector2f myPos = it->getPosition();
+		sf::Vector2f desiredVel = desiredPos - myPos;
+		float Distance = length(desiredVel);
+		//miramos si se tiene que mover la bola
+		if (Distance > followDistance) {
+			//si esta muy lejos nos movemos hacia el punto mas cercano (sin pasarse de f)
+			desiredPos = desiredPos - (normalize(desiredVel)*followDistance);
+			desiredVel = desiredPos - myPos;
+			float maxDistance = maxVelocity * delta;
+			//lo limitamos respecto a la velocidad
+			if (length(desiredVel)>maxDistance) {
+				desiredVel = normalize(desiredVel)*maxDistance;
+			}
+			it->setPosition(myPos + desiredVel);
+			desiredPos = it->getPosition();
+		}
 	}
-	head->setPosition(head->getPosition() + velocity*delta);
-	
-
 }
-
-//void Player::movePlayer(sf::Vector2f target, float delta) {
-//	std::list<sf::CircleShape>::iterator first = body.begin();
-//	sf::Vector2f desiredVel = target;// -first->getPosition();
-//	
-//	float Length = length(desiredVel);
-//	float maxDistance= maxVelocity * delta;
-//	//maximo de velocidad
-//	if (Length > maxDistance) {
-//		desiredVel = normalize(desiredVel)*maxDistance;
-//	}
-//	//target = normalize(target)*maxVelocity * delta;
-//	//maximo de angulo
-//	/*std::list<sf::CircleShape>::iterator second = ++body.begin();
-//	sf::Vector2f Direction = first->getPosition() - second->getPosition();
-//	*/
-//	first->setPosition(first->getPosition() + desiredVel);
-//	//first->setPosition(first->getPosition() + target);
-//	orientation = target*delta;
-//
-//	//for (std::list<sf::CircleShape>::iterator second = ++body.begin(); second != body.end(); ++second) {
-//	//	desiredVel = first->getPosition() - second->getPosition();
-//	//	sf::Vector2f followTarget = first->getPosition() - (normalize(desiredVel)*followDistance);
-//	//	desiredVel = followTarget - second->getPosition();
-//	//	Length = length(desiredVel);
-//	//	//no queremos que se sobrepongan
-//	//	if (Length > maxDistance) {
-//	//		desiredVel = normalize(desiredVel)*maxDistance;
-//	//	}
-//	//		
-//	//		second->setPosition(second->getPosition() + desiredVel);
-//	//	++first;
-//	//}
-//	
-//
-//
-//}
 
 void Player::updateOriLine() {
 	oriLine.setPosition(body.begin()->getPosition().x, body.begin()->getPosition().y);
