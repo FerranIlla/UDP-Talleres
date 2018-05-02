@@ -91,16 +91,16 @@ void Player::movePlayer(sf::Vector2f target, float delta) {
 			desiredVel = normalize(desiredVel)*maxDistance;
 		}
 		//lo limitamos respecto al angulo
-		/*velocity = (body.begin()++)->getPosition() - it->getPosition();
+		velocity = (++body.begin())->getPosition() - it->getPosition();
 
 		float anglebetween = atan2(desiredVel.y,desiredVel.x) - atan2(velocity.y, velocity.x);
-		if (maxAngle > M_PI) {
-			maxAngle = M_PI - maxAngle;
+		if (anglebetween > M_PI) {
+			anglebetween = anglebetween-M_PI_2;
 		}
 		if (abs(anglebetween) > maxAngle) {
 			float angleBetweenSign = anglebetween / abs(anglebetween);
 			desiredVel = rotate(desiredVel, anglebetween+ (maxAngle*angleBetweenSign));
-		}*/
+		}
 
 		it->setPosition(myPos + desiredVel);
 		desiredPos = it->getPosition();
