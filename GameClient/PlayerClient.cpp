@@ -1,5 +1,5 @@
 #include "PlayerClient.h"
-#include <iostream>
+
 
 Player::Player(sf::Vector2i position, sf::Color col, float rad,int i) {
 	radius = rad;
@@ -9,7 +9,9 @@ Player::Player(sf::Vector2i position, sf::Color col, float rad,int i) {
 	followDistance = 10;
 	maxVelocity = 200;
 	maxForce = 3;
-	velocity = sf::Vector2f(1.f, 0.f)*maxVelocity;
+	maxAngle = 10*DEG2RAD;
+	
+	//velocity = sf::Vector2f(1.f, 0.f)*maxVelocity;
 	oriLine.setSize(sf::Vector2f(40, 6));
 	oriLine.setOrigin(0,oriLine.getSize().y/2);
 	oriLine.setFillColor(sf::Color::Blue);
@@ -74,7 +76,38 @@ void Player::movePlayer(sf::Vector2f target, float delta) {
 	sf::Vector2f desiredPos = target;
 
 	std::list<sf::CircleShape>::iterator it = body.begin();
-    for (std::list<sf::CircleShape>::iterator it = body.begin(); it != body.end(); ++it) {
+	//comprovamos la distancia hasta el target
+	sf::Vector2f myPos = it->getPosition();
+	sf::Vector2f desiredVel = desiredPos - myPos;
+	float Distance = length(desiredVel);
+	//miramos si se tiene que mover la bola
+	if (Distance > followDistance) {
+		//si esta muy lejos nos movemos hacia el punto mas cercano (sin pasarse de f)
+		desiredPos = desiredPos - (normalize(desiredVel)*followDistance);
+		desiredVel = desiredPos - myPos;
+		float maxDistance = maxVelocity * delta;
+		//lo limitamos respecto a la velocidad
+		if (length(desiredVel)>maxDistance) {
+			desiredVel = normalize(desiredVel)*maxDistance;
+		}
+		//lo limitamos respecto al angulo
+		/*velocity = (body.begin()++)->getPosition() - it->getPosition();
+
+		float anglebetween = atan2(desiredVel.y,desiredVel.x) - atan2(velocity.y, velocity.x);
+		if (maxAngle > M_PI) {
+			maxAngle = M_PI - maxAngle;
+		}
+		if (abs(anglebetween) > maxAngle) {
+			float angleBetweenSign = anglebetween / abs(anglebetween);
+			desiredVel = rotate(desiredVel, anglebetween+ (maxAngle*angleBetweenSign));
+		}*/
+
+		it->setPosition(myPos + desiredVel);
+		desiredPos = it->getPosition();
+		++it;
+	}
+
+    while (it != body.end()) {
 		//comprovamos la distancia hasta el target
 		sf::Vector2f myPos = it->getPosition();
 		sf::Vector2f desiredVel = desiredPos - myPos;
@@ -92,6 +125,7 @@ void Player::movePlayer(sf::Vector2f target, float delta) {
 			it->setPosition(myPos + desiredVel);
 			desiredPos = it->getPosition();
 		}
+		++it;
 	}
 }
 

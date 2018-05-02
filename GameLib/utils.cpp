@@ -41,11 +41,21 @@ sf::Vector2i charToDir(std::string str) {
 
 float length(sf::Vector2f vector) {
 return sqrt(vector.x*vector.x+vector.y*vector.y);
-}
+}  
 
 float dotProduct(sf::Vector2f first, sf::Vector2f second) {
 return first.x*second.x + first.y*second.y;
 }
+sf::Vector2f rotate(sf::Vector2f vec, float angle) {
+	sf::Vector2f ret;
+	float acos = cos(angle);
+	float asin = sin(angle);
+	ret.x = acos * vec.x - asin * vec.y;
+	ret.y = asin * vec.x - acos * vec.y;
+	return ret;
+}
+
+
 
 sf::Vector2f normalize(sf::Vector2f vec) {
 return vec / length(vec);

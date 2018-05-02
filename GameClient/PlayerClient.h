@@ -1,8 +1,10 @@
 #pragma once
+#define _USE_MATH_DEFINES
 #include <list>
 #include <PlayerBase.h>
 #include "utils.h"
 #include <cmath>
+
 
 class Player : public PlayerBase{
 private:
@@ -11,6 +13,7 @@ private:
 	float followDistance;
 	sf::Vector2f target;
 	sf::Vector2f velocity;
+	float maxAngle;
 
 	sf::RectangleShape oriLine;
 public:

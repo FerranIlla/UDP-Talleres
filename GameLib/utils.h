@@ -1,7 +1,11 @@
 #pragma once
+#define _USE_MATH_DEFINES
 #include <vector>
 #include "SFML\Network.hpp"
 #include "SFML\Graphics.hpp"	
+#include <cmath>
+#define RAD2DEG (180/M_PI);
+#define DEG2RAD (M_PI/180)
 
 std::vector<std::string> commandToWords(std::string command);
 
@@ -63,7 +67,11 @@ float length(sf::Vector2f vector);
 
 float dotProduct(sf::Vector2f first, sf::Vector2f second);
 
+sf::Vector2f crossProduct(sf::Vector2f first, sf::Vector2f second);
+
 sf::Vector2f normalize(sf::Vector2f vec);
+
+sf::Vector2f rotate(sf::Vector2f vec, float angle);
 
 enum TypeOfMessage :int8_t {
 	Hello, NewPlayer, Ack, Ping, Disconnect
