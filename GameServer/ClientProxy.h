@@ -14,6 +14,8 @@ public:
 	int id;
 	std::map<int, std::string> outMessages;
 
+	
+
 	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer);
 
 	void resetPing();

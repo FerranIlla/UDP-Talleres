@@ -1,7 +1,7 @@
 #include "PlayerClient.h"
 
 
-Player::Player(sf::Vector2i position, sf::Color c, float rad,int i) {
+Player::Player(sf::Vector2i position, sf::Color c, float rad,int i, sf::Vector2f tar) {
 	radius = rad;
 	//setup Parameters
 	len = 5;
@@ -11,6 +11,7 @@ Player::Player(sf::Vector2i position, sf::Color c, float rad,int i) {
 	maxForce = 3;
 	maxAngle = 20*DEG2RAD;
 	col = c;
+	target = tar;
 	
 	//velocity = sf::Vector2f(1.f, 0.f)*maxVelocity;
 	oriLine.setSize(sf::Vector2f(40, 6));

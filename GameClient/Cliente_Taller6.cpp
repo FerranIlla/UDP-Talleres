@@ -190,7 +190,7 @@ int main() {
 				std::cout << "Otro player conectado\n";
 				int id = std::stoi(words[2]);
 				if (players.find(id) == players.end()) {
-					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id);
+					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id, sf::Vector2f(std::stoi(words[5]), std::stoi(words[6])));
 					players.emplace(id, player);
 					sendAck(std::stoi(words[1]), &socket);
 				}
@@ -210,7 +210,7 @@ int main() {
 			else if (type == TypeOfMessage::Hello) {
 				std::cout << "Welcome recivido\n";
 				myId = std::stoi(words[1]);
-				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), 10, myId);
+				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), 10, myId, sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
 				players.emplace(myId, player);
 				outMessages.erase(0); //borramos el Hello
 
