@@ -225,7 +225,9 @@ int main() {
 			if ((*it).second.isDisconected(deltaTime)) {
 				std::cout << "Jugador expulsado\n";
 				int id = it->second.id;
-				clients.erase(it++);
+				std::map<Address, ClientProxy >::iterator temp = it;
+				it++;
+				clients.erase(temp);
 				disponiblePlayerIds.push(id);
 				for (std::map<Address, ClientProxy>::iterator itB = clients.begin(); itB != clients.end(); ++itB) {
 					std::string s = std::to_string(Disconnect);
