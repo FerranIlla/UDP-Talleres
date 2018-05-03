@@ -204,6 +204,7 @@ int main() {
 			else if (type == TypeOfMessage::Disconnect) {
 				if (std::stoi(words[1]) == myId) {
 					std::cout << "Has sido desconectado\n";
+					window.close();
 				}
 				else {
 					players.erase(std::stoi(words[1]));
@@ -217,6 +218,12 @@ int main() {
 				players.emplace(myId, player);
 				outMessages.erase(0); //borramos el Hello
 
+			}
+			else if (type == TypeOfMessage::Kill) {
+				//comprovar si el idPlayer que se ha recibido == myId
+				//procesar lo que pasa si mueres
+
+				//procesar lo que pasa si muere otro
 			}
 			serverMessages.pop();
 		}

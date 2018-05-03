@@ -77,7 +77,7 @@ sf::Vector2f normalize(sf::Vector2f vec);
 sf::Vector2f rotate(sf::Vector2f vec, float angle);
 
 enum TypeOfMessage :int8_t {
-	Hello, NewPlayer, Ack, Ping, Disconnect, Move
+	Hello, NewPlayer, Ack, Ping, Disconnect, Move, Kill
 };
 
 
