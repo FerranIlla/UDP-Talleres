@@ -9,6 +9,8 @@
 class Player : public PlayerBase{
 private:
 	std::list<sf::CircleShape> body;
+	sf::CircleShape*  tail;
+	sf::Color col;
 	float radius;
 	float followDistance;
 	sf::Vector2f target;
@@ -22,6 +24,7 @@ public:
 	void update(float delta);
 	void movePlayer(sf::Vector2f position, float delta);
 	void setTarget(sf::Vector2f);
+	void grow();
 
 	void updateOriLine();
 };

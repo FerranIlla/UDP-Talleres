@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <SFML\Graphics.hpp>
 #include <SFML\Network.hpp>
 #include <iostream>
@@ -78,9 +79,6 @@ void receive(sf::UdpSocket* socket, std::queue<std::string>* msgList, sf::Render
 int main() {
 	sf::Vector2i screenDimensions(800, 600);
 
-	sf::RenderWindow window;
-	window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "MegaGame");
-
 	sf::Font font;
 	if (!font.loadFromFile("calibril.ttf")) {
 		std::cout << "No se puede leer la font\n" << std::endl;
@@ -94,14 +92,16 @@ int main() {
 	sf::UdpSocket socket;
 	int msgId = 0;
 
-
-
-
 	std::cout << "Introduce un nickname:\n	";
 	std::string playerNick;
 	std::cin >> playerNick;
 	sendNew(std::to_string(TypeOfMessage::Hello) + "_" + playerNick, &socket, msgId, &outMessages);
 	std::cout << "nick enviado al servidor\n";
+
+
+	sf::RenderWindow window;
+	window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "MegaGame");
+
 
 	//gameplay______________________________________________________________________________________________
 	//Map mapa(window.getSize(), sf::Vector2i(8, 6));
@@ -207,6 +207,7 @@ int main() {
 #pragma region UpdatePlayers
 		
 		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
+			//it->second->setTarget(sf::Vector2f(0, 0));
 			(*it).second->update(deltaTime.asSeconds());
 		}
 #pragma endregion

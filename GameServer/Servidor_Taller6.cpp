@@ -38,8 +38,8 @@ public:
 	std::map<int, std::string> outMessages;
 
 	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer) {
-		pos.x = rand() % map->getSize().x;
-		pos.y = rand() % map->getSize().y;
+		pos.x = rand() % (map->getSize().x - 200) + 100;
+		pos.y = rand() % (map->getSize().y - 200) + 100;
 		address = ad;
 		nickname = name;
 		timeSincePing = sf::milliseconds(0);

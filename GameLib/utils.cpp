@@ -48,10 +48,10 @@ return first.x*second.x + first.y*second.y;
 }
 sf::Vector2f rotate(sf::Vector2f vec, float angle) {
 	sf::Vector2f ret;
-	float acos = cos(angle);
-	float asin = sin(angle);
-	ret.x = acos * vec.x - asin * vec.y;
-	ret.y = asin * vec.x - acos * vec.y;
+	float theCos = cos(angle);
+	float theSin = sin(angle);
+	ret.x = (theCos * vec.x) - (theSin * vec.y);
+	ret.y = (theSin * vec.x) + (theCos * vec.y);
 	return ret;
 }
 
