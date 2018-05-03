@@ -4,8 +4,11 @@
 #include "SFML\Network.hpp"
 #include "SFML\Graphics.hpp"	
 #include <cmath>
-#define RAD2DEG (180/M_PI);
+#include <random>
+#include <time.h>
+#define RAD2DEG (180/M_PI)
 #define DEG2RAD (M_PI/180)
+#define PERCENT_PACKETLOST 0.0f
 
 std::vector<std::string> commandToWords(std::string command);
 
@@ -76,3 +79,8 @@ sf::Vector2f rotate(sf::Vector2f vec, float angle);
 enum TypeOfMessage :int8_t {
 	Hello, NewPlayer, Ack, Ping, Disconnect, Move
 };
+
+
+float getRandomFloat();
+
+bool percentageGate(float percentageLost);

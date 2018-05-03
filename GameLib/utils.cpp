@@ -61,3 +61,10 @@ sf::Vector2f normalize(sf::Vector2f vec) {
 return vec / length(vec);
 }
 
+float getRandomFloat() {
+	return static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
+
+bool percentageGate(float percentageLost) {
+	return ((getRandomFloat() * 100) > percentageLost);
+}

@@ -58,31 +58,37 @@ void myReceiveFunction(sf::UdpSocket *sock, std::queue<InMsg>* msgList, bool* op
 };
 
 void sendNew(std::string s, sf::UdpSocket* socket, int &id, Address addr, std::map<int, std::string>* outMessages) {
-	if (socket->send(&s[0], s.length(), addr.ip, addr.port) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	bool errorInSend = false;
+	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
+		errorInSend = (socket->send(&s[0], s.length(), addr.ip, addr.port) != sf::Socket::Done);
 	}
 	else {
-		outMessages->emplace(id, s);
-		id=(id+1)%MaxIdMsg;
+		std::cout << "Paquete perdido. " << std::endl;
 	}
-	//socket->send()
-}
 
-void reSend(outMsg msg, sf::UdpSocket* socket, sf::IpAddress ip, int port) {
-	if (socket->send(&msg.msg[0], msg.msg.length(), ip, port) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	if(errorInSend) std::cout << "Ha habido un problema al enviar\n";
+	else {
+		outMessages->emplace(id, s);
+		id = (id + 1) % MaxIdMsg;
 	}
+	
 }
 
 void sendNormal(std::string msg, sf::UdpSocket* socket, Address addr) {
-	if (socket->send(&msg[0], msg.length(), addr.ip, addr.port) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
+		if (socket->send(&msg[0], msg.length(), addr.ip, addr.port) != sf::Socket::Done) {
+			std::cout << "Ha habido un problema al enviar\n";
+		}
+	}
+	else {
+		std::cout << "Paquete perdido." << std::endl;
 	}
 }
 
 
 
 int main() {
+	srand(time(NULL));
 	sf::UdpSocket socket;
 	sf::UdpSocket receiveSocket;
 	std::map<Address, ClientProxy> clients;
@@ -198,7 +204,7 @@ int main() {
 			for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 				for (std::map<int, std::string>::iterator itMsg = it->second.outMessages.begin(); itMsg != it->second.outMessages.end(); ++itMsg) {
 					std::cout << "ResendingMsg id: " + std::to_string(itMsg->first);
-					reSend(itMsg->second, &socket, it->first.ip, it->first.port);
+					sendNormal(itMsg->second, &socket, it->first);
 				}
 			}
 			timeLastResend -= ResendTime;

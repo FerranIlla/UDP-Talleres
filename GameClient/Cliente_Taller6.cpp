@@ -21,34 +21,42 @@ typedef outMsgClient outMsg;
 std::mutex mu;
 
 void sendNew(std::string s, sf::UdpSocket* socket, int &id, std::map<int, outMsg>* outMessages) {
-	if (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	bool errorInSend = false;
+	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
+		errorInSend = (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done);
 	}
+	else {
+		std::cout << "Paquete perdido. " << std::endl;
+	}
+
+	if (errorInSend) std::cout << "Ha habido un problema al enviar\n";
 	else {
 		outMsg msg(s);
 		outMessages->emplace(id, msg);
 		id = (id + 1) % MaxIdMsg;
 	}
-	//socket->send()
 }
 
 void sendAck(int id, sf::UdpSocket* socket) {
-	std::string s = std::to_string(TypeOfMessage::Ack) + "_" + std::to_string(id);
-	if (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
+		std::string s = std::to_string(TypeOfMessage::Ack) + "_" + std::to_string(id);
+		if (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done) {
+			std::cout << "Ha habido un problema al enviar\n";
+		}
 	}
-}
-
-void reSend(outMsg msg, sf::UdpSocket* socket) {
-	std::cout << "reenvio";
-	if (socket->send(&msg.msg[0], msg.msg.length(), ServerAdress, 50000) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	else {
+		std::cout << "Paquete perdido. " << std::endl;
 	}
 }
 
 void sendNormal(std::string msg, sf::UdpSocket* socket) {
-	if (socket->send(msg.c_str(), msg.length(), ServerAdress, 50000) != sf::Socket::Done) {
-		std::cout << "Ha habido un problema al enviar\n";
+	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
+		if (socket->send(msg.c_str(), msg.length(), ServerAdress, 50000) != sf::Socket::Done) {
+			std::cout << "Ha habido un problema al enviar\n";
+		}
+	}
+	else {
+		std::cout << "Paquete perdido." << std::endl;
 	}
 }
 
@@ -78,6 +86,7 @@ void receive(sf::UdpSocket* socket, std::queue<std::string>* msgList, sf::Render
 
 
 int main() {
+	srand(time(NULL));
 	sf::Vector2i screenDimensions(800, 600);
 
 	sf::Font font;
@@ -215,7 +224,8 @@ int main() {
 		timeLastResend += deltaTime;
 		if (timeLastResend>ResendTime) {
 			for (std::map<int, outMsg>::iterator it = outMessages.begin(); it != outMessages.end(); ++it) {
-				reSend(it->second, &socket);
+				std::cout << "Reenviando un mensaje" << std::endl;
+				sendNormal(it->second.msg, &socket);
 			}
 			timeLastResend -= ResendTime;
 		}
