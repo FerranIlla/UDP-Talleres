@@ -140,11 +140,14 @@ int main() {
 				break;
 			case sf::Event::MouseMoved:
 				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
-				if(myId!=-1)
-					players.find(myId)->second->setTarget(mousePos);
-				if (timeLastMoveSend > sendMovementTime) {
-					std::string s =std::to_string(TypeOfMessage::Move)+"_"+std::to_string(evento.mouseMove.x)+"_"+ std::to_string(evento.mouseMove.y);
-					sendNormal(s, &socket);
+				if (myId != -1) {
+
+					std::map <int, Player*>::iterator p = players.find(myId);
+					p->second->setTarget(mousePos);
+					if (timeLastMoveSend > sendMovementTime) {
+						std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(evento.mouseMove.x) + "_" + std::to_string(evento.mouseMove.y);
+						sendNormal(s, &socket);
+					}
 				}
 				break;
 			case sf::Event::KeyPressed:

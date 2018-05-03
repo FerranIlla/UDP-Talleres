@@ -51,6 +51,10 @@ void Player::setTarget(sf::Vector2f tar) {
 	target = tar;
 	
 }
+/*
+sf::Vector2f Player::getTarget(){
+	return target;
+}*/
 
 void Player::update(float delta) {
 	movePlayer(target, delta);

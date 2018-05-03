@@ -11,12 +11,6 @@ private:
 	std::list<sf::CircleShape*> body;
 	sf::CircleShape*  tail;
 	sf::Color col;
-
-
-	
-
-
-
 	sf::RectangleShape oriLine;
 public:
 	Player(sf::Vector2i,sf::Color, float, int, sf::Vector2f);
@@ -24,6 +18,7 @@ public:
 	void update(float delta);
 	void movePlayer(sf::Vector2f position, float delta);
 	void setTarget(sf::Vector2f);
+
 	void grow();
 
 	void updateOriLine();

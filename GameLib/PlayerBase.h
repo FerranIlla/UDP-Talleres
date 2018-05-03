@@ -17,4 +17,5 @@ protected:
 	sf::Vector2f velocity;
 public:
 	void setPosition(sf::Vector2i);
+	//virtual sf::Vector2f getTarget()=0;
 };
