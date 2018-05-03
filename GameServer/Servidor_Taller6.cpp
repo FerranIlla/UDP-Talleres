@@ -8,57 +8,16 @@
 #include <queue>
 #include "utils.h"
 #include "ServerMap.h"
+#include "ClientProxy.h"
+#include "timeDefines.h"
 
 #define MSG_LENGTH 512
-#define ResendTime sf::milliseconds(150)
-#define PingTime sf::milliseconds(1000)
-#define DisconnectTime sf::milliseconds(5000)
+
 #define MaxIdMsg 255;
 std::mutex mu;
 
 typedef outMsgServer outMsg;
 
-struct Position {
-	int x, y;
-	bool operator==(Position &rho) {
-		if (x == rho.x) {
-			return y == rho.y;
-		}
-		return false;
-	}
-};
-
-class ClientProxy {
-public:
-	std::string nickname;
-	Position pos;
-	Address address; //suposo que no cal perque hi ha el map
-	sf::Time timeSincePing;
-	int id;
-	std::map<int, std::string> outMessages;
-
-	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer) {
-		pos.x = rand() % (map->getSize().x - 200) + 100;
-		pos.y = rand() % (map->getSize().y - 200) + 100;
-		address = ad;
-		nickname = name;
-		timeSincePing = sf::milliseconds(0);
-		id = idPlayer;
-	};
-
-	void resetPing() {
-		timeSincePing = sf::milliseconds(0);
-	}
-
-	bool isDisconected(sf::Time deltaTime) {
-		timeSincePing += deltaTime;
-		return timeSincePing > DisconnectTime;
-	}
-
-	void addOutMsg(std::string s, int id) {
-		outMessages.emplace(id,s);
-	}
-};
 
 struct InMsg {
 	std::string msg;
@@ -168,13 +127,23 @@ int main() {
 			mu.unlock();
 			std::vector<std::string> words = commandToWords(msg.msg);
 #pragma region Existing Client
-			if (clients.find(msg.addr) != clients.end()) {
+			std::map<Address, ClientProxy>::iterator sendingClient = clients.find(msg.addr);
+			if ( sendingClient!= clients.end()) {
 				TypeOfMessage type = (TypeOfMessage)std::stoi(words[0]);
+
 				if (type == TypeOfMessage::Ack) {
-					clients.find(msg.addr)->second.outMessages.erase(std::stoi(words[1]));//borramos el mensaje de los outs
+					sendingClient->second.outMessages.erase(std::stoi(words[1]));//borramos el mensaje de los outs
 				}
 				else if (type == TypeOfMessage::Ping) {
-					clients.find(msg.addr)->second.resetPing();
+					sendingClient->second.resetPing();
+				}
+				else if (type == TypeOfMessage::Move) {
+					for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+						if (it->second.id !=sendingClient->second.id ) {
+							std::string s = TypeOfMessage::Move + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
+							sendNormal(s, &socket, it->first);
+						}
+					}
 				}
 				else if (type == TypeOfMessage::Disconnect) {
 					int id = clients.find(msg.addr)->second.id;

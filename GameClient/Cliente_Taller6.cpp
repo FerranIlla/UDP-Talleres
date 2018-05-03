@@ -15,6 +15,7 @@ typedef outMsgClient outMsg;
 #define MaxDataRecived 100
 #define ServerAdress "127.0.0.1"
 #define ResendTime sf::milliseconds(250)
+#define sendMovementTime sf::milliseconds(150)
 #define MaxIdMsg 255
 
 std::mutex mu;
@@ -92,6 +93,7 @@ int main() {
 	sf::UdpSocket socket;
 	int msgId = 0;
 
+
 	std::cout << "Introduce un nickname:\n	";
 	std::string playerNick;
 	std::cin >> playerNick;
@@ -110,6 +112,7 @@ int main() {
 	sf::Time deltaTime;
 	sf::Time lastFrameTime = sf::milliseconds(0);
 	sf::Time timeLastResend = sf::milliseconds(0);
+	sf::Time timeLastMoveSend = sf::milliseconds(0);
 	sf::Vector2f mousePos(0,0);
 	int myId=-1;
 
@@ -117,6 +120,7 @@ int main() {
 
 	while (window.isOpen()) {
 		deltaTime = timer.restart() - lastFrameTime;
+		timeLastMoveSend += deltaTime;
 #pragma region  Input
 		sf::Event evento;
 		while (window.pollEvent(evento)) {
@@ -129,6 +133,10 @@ int main() {
 				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
 				if(myId!=-1)
 					players.find(myId)->second->setTarget(mousePos);
+				if (timeLastMoveSend > sendMovementTime) {
+					std::string s =std::to_string(TypeOfMessage::Move)+"_"+std::to_string(evento.mouseMove.x)+"_"+ std::to_string(evento.mouseMove.y);
+					sendNormal(s, &socket);
+				}
 				break;
 			case sf::Event::KeyPressed:
 				if (evento.key.code == sf::Keyboard::Return) {
@@ -161,6 +169,13 @@ int main() {
 				//std::cout << "Ping Recivido";
 				sendNormal(std::to_string(TypeOfMessage::Ping), &socket);
 			}
+			else if (type == TypeOfMessage::Move) {
+				int idPlayerMove = std::stoi(words[1]);
+				std::map<int,Player*>::iterator p = players.find(idPlayerMove);
+				if (p != players.end() ){
+					p->second->setTarget(sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
+				}
+			}
 			else if (type == TypeOfMessage::NewPlayer) {
 				std::cout << "Otro player conectado\n";
 				int id = std::stoi(words[2]);
@@ -182,7 +197,7 @@ int main() {
 					sendAck(std::stoi(words[2]), &socket);
 				}
 			}
-			else if (std::stoi(words[0]) == TypeOfMessage::Hello) {
+			else if (type == TypeOfMessage::Hello) {
 				std::cout << "Welcome recivido\n";
 				myId = std::stoi(words[1]);
 				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), 10, myId);

@@ -156,11 +156,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientProxy.cpp" />
     <ClCompile Include="ServerMap.cpp" />
     <ClCompile Include="Servidor_Taller6.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientProxy.h" />
     <ClInclude Include="ServerMap.h" />
+    <ClInclude Include="timeDefines.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
