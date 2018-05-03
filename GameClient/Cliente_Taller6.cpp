@@ -146,6 +146,7 @@ int main() {
 					msg = msg + "_" + std::to_string(rand() % mapa.getSize().y);
 
 					serverMessages.emplace(msg);*/
+					players.find(myId)->second->grow();
 				}
 				break;
 			default:

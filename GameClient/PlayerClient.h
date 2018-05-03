@@ -8,7 +8,7 @@
 
 class Player : public PlayerBase{
 private:
-	std::list<sf::CircleShape> body;
+	std::list<sf::CircleShape*> body;
 	sf::CircleShape*  tail;
 	sf::Color col;
 	float radius;
