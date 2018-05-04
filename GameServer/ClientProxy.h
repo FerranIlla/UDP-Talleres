@@ -31,6 +31,9 @@ public:
 
 	void movePlayer(float delta);
 
+	int checkFoodCollision(std::map<int, sf::Vector2f*>&foods);
+	void grow();
+
 	sf::Vector2f getHeadPos();
 	int getRadius();
 	void setTarget(sf::Vector2f t);

@@ -19,6 +19,7 @@ ClientProxy::ClientProxy(ServerMap* map, Address ad, std::string name, int idPla
 	for (int i = 0; i < len; i++) {
 		sf::Vector2f* point=new sf::Vector2f(pos.x, pos.y);
 		body.push_back(point);
+		tail = point;
 	}
 	target = pos;
 }
@@ -91,6 +92,25 @@ void ClientProxy::movePlayer(float delta) {
 			desiredPos = **it;
 		}
 		++it;
+	}
+}
+
+int ClientProxy::checkFoodCollision(std::map<int, sf::Vector2f*>&foods) {
+	for (std::map<int, sf::Vector2f*>::iterator it = foods.begin(); it != foods.end();++it) {
+		sf::Vector2f distance = *it->second - this->getHeadPos();
+		if (length(distance) < radius + 8) {
+			return it->first;
+		}
+	}
+	return -1;
+}
+
+void ClientProxy::grow() {
+	len += 3;
+	for (int i = 0; i < 3; i++) {
+		sf::Vector2f* point = new sf::Vector2f(tail->x,tail->y);
+		tail = point;
+		body.push_back(point);
 	}
 }
 

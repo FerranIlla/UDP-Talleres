@@ -122,7 +122,8 @@ int main() {
 
 	ServerMap mapa(sf::Vector2i(800, 600));
 
-	//aqui iría el bucle del juego
+
+	//bucle del juego
 	while (open) {
 		deltaTime = timer.restart() - lastFrameTime;
 #pragma region Received Messages
@@ -194,10 +195,12 @@ int main() {
 						clients.emplace(msg.addr, newClient);
 						if (clients.size() == numberOfPlayers) {
 							gameStarted = true;
-							std::cout << "Empieza la partida\n";
-							
+							std::cout << "Empieza la partida\n";					
 							for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 								s = std::to_string(TypeOfMessage::GameStart) + "_" + std::to_string(idOutMsg);
+								sendNew(s, &socket, idOutMsg, it->first, &it->second.outMessages);
+								//enviamos la primera comida
+								s = std::to_string(TypeOfMessage::Food) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(mapa.foodId) + "_" + std::to_string(mapa.food.find(mapa.foodId)->second->x) + "_" + std::to_string(mapa.food.find(mapa.foodId)->second->y);
 								sendNew(s, &socket, idOutMsg, it->first, &it->second.outMessages);
 							}
 						}
@@ -261,6 +264,16 @@ int main() {
 			for (std::map <Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 				if (it->second.isAlive) {
 					it->second.movePlayer(deltaTime.asSeconds());
+					int idFoodEaten = it->second.checkFoodCollision(mapa.food);
+					if (idFoodEaten != -1) {
+						for (std::map <Address, ClientProxy>::iterator itSend = clients.begin(); itSend != clients.end(); ++itSend) {
+							std::string s = std::to_string(TypeOfMessage::Grow) + "_" + std::to_string(idOutMsg)+"_"+std::to_string(it->second.id)+"_"+ std::to_string(idFoodEaten);
+							sendNew(s, &socket, idOutMsg, itSend->first, &itSend->second.outMessages);
+						}
+						mapa.food.erase(idFoodEaten);
+						it->second.grow();
+					}
+					//si se sale del mapa
 					if (mapa.isPlayerOutside(it->second.getHeadPos(), it->second.getRadius())) {
 						it->second.isAlive = false;
 						for (std::map <Address, ClientProxy>::iterator it2 = clients.begin(); it2 != clients.end(); ++it2) {
@@ -270,7 +283,15 @@ int main() {
 					}
 				}
 			}
+		
+			if (mapa.update(deltaTime)) {
+				for (std::map <Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+					std::string s = std::to_string(TypeOfMessage::Food) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(mapa.foodId)+"_"+std::to_string(mapa.food.find(mapa.foodId)->second->x)+"_"+ std::to_string(mapa.food.find(mapa.foodId)->second->y);
+					sendNew(s, &socket, idOutMsg, it->first, &it->second.outMessages);
+				}
+			}
 		}
+
 		if (clients.size() == 0 && gameStarted) {
 			gameStarted = false;
 			std::cout << "Partida acabada, serverReiniciado\n";

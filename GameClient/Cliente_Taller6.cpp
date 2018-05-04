@@ -125,6 +125,9 @@ int main() {
 	sf::Vector2f mousePos(0,0);
 	int myId=-1;
 	bool gameStarted = false;
+	
+	//food
+	std::map<int, sf::CircleShape*> foods;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
@@ -190,6 +193,23 @@ int main() {
 				std::map<int,Player*>::iterator p = players.find(idPlayerMove);
 				if (p != players.end() ){
 					p->second->setTarget(sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
+				}
+			}
+			else if (type == TypeOfMessage::Food) {
+				sf::CircleShape* newFood = new sf::CircleShape(8);
+				newFood->setFillColor(sf::Color(255, 255, 255, 200));
+				newFood->setPosition(std::stoi(words[3]), std::stoi(words[4]));
+				foods.emplace(std::stoi(words[2]), newFood);
+				sendAck(std::stoi(words[1]), &socket);
+			}
+			else if (type == TypeOfMessage::Grow) {
+				if (foods.find(std::stoi(words[3])) != foods.end()) {
+					players.find(std::stoi(words[2]))->second->grow();
+					foods.erase(std::stoi(words[3]));
+					sendAck(std::stoi(words[1]), &socket);
+				}
+				else {
+					sendAck(std::stoi(words[1]), &socket);
 				}
 			}
 			else if (type == TypeOfMessage::NewPlayer) {
@@ -273,6 +293,10 @@ int main() {
 
 		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
 			(*it).second->draw(&window);
+		}
+
+		for (std::map<int, sf::CircleShape*>::iterator it = foods.begin(); it != foods.end(); ++it) {
+			window.draw(*it->second);
 		}
 
 		window.display();

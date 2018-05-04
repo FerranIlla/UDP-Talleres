@@ -63,6 +63,7 @@ void Player::update(float delta) {
 }
 
 void Player::grow() {
+	len += 3;
 	for (int i = 0; i < 3; i++) {
 		sf::CircleShape* circle = new sf::CircleShape(radius);
 		circle->setOrigin(radius, radius);
