@@ -11,6 +11,7 @@ Player::Player(sf::Vector2i position, sf::Color c, float rad,int i, sf::Vector2f
 	maxAngle = 20*DEG2RAD;
 	col = c;
 	target = tar;
+	isAlive = true;
 	
 	//velocity = sf::Vector2f(1.f, 0.f)*maxVelocity;
 	oriLine.setSize(sf::Vector2f(40, 6));
@@ -37,11 +38,12 @@ Player::Player(sf::Vector2i position, sf::Color c, float rad,int i, sf::Vector2f
 }
 
 void Player::draw(sf::RenderWindow* window) {
-	for (std::list<sf::CircleShape*>::iterator i = body.begin()++; i != body.end(); ++i) {
-		window->draw(**i);
+	if (isAlive) {
+		for (std::list<sf::CircleShape*>::iterator i = body.begin()++; i != body.end(); ++i) {
+			window->draw(**i);
+		}
+		window->draw(**body.begin());
 	}
-	window->draw(**body.begin());
-
 	//window->draw(oriLine);
 }
 

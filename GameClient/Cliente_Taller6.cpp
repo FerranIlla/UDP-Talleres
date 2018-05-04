@@ -229,10 +229,20 @@ int main() {
 				sendAck(std::stoi(words[1]),&socket);
 			}
 			else if (type == TypeOfMessage::Kill) {
-				//comprovar si el idPlayer que se ha recibido == myId
-				//procesar lo que pasa si mueres
-
-				//procesar lo que pasa si muere otro
+				int idPlayerKill = std::stoi(words[2]);
+				std::map<int, Player*>::iterator p = players.find(idPlayerKill);
+				if (p != players.end()) {
+					if (p->second->isAlive) {
+						p->second->isAlive = false;
+						sendAck(std::stoi(words[1]), &socket);
+						if (idPlayerKill == myId) {
+							std::cout << "Has perdido!\n";
+						}
+					}
+					else {
+						sendAck(std::stoi(words[1]), &socket);
+					}
+				}
 			}
 			serverMessages.pop();
 		}

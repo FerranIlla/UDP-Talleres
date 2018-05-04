@@ -19,7 +19,7 @@ public:
 	//movimiento
 	std::list<sf::Vector2f*>body;
 	sf::Vector2f* tail;
-
+	bool isAlive;
 
 	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer);
 
@@ -30,4 +30,8 @@ public:
 	void addOutMsg(std::string s, int id);
 
 	void movePlayer(float delta);
+
+	sf::Vector2f getHeadPos();
+	int getRadius();
+	void setTarget(sf::Vector2f t);
 };

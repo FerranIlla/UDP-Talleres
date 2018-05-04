@@ -4,7 +4,7 @@ Map::Map(sf::Vector2i size):size(size){
 	
 }
 
-bool Map::isPlayerOutside(sf::Vector2i pos, float radius){
+bool Map::isPlayerOutside(sf::Vector2f pos, float radius){
 	if (pos.y - radius < 0) return true;
 	else if (pos.y + radius > size.y) return true;
 	else if (pos.x - radius < 0) return true;

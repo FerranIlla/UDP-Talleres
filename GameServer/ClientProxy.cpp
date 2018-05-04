@@ -13,13 +13,14 @@ ClientProxy::ClientProxy(ServerMap* map, Address ad, std::string name, int idPla
 	maxVelocity = 150;
 	maxForce = 3;
 	maxAngle = 20 * DEG2RAD;
-
+	isAlive = true;
 	pos.x = rand() % (map->getSize().x - 200) + 100;
 	pos.y = rand() % (map->getSize().y - 200) + 100;
 	for (int i = 0; i < len; i++) {
 		sf::Vector2f* point=new sf::Vector2f(pos.x, pos.y);
 		body.push_back(point);
 	}
+	target = pos;
 }
 
 void ClientProxy::resetPing() {
@@ -91,4 +92,16 @@ void ClientProxy::movePlayer(float delta) {
 		}
 		++it;
 	}
+}
+
+sf::Vector2f ClientProxy::getHeadPos() {
+	return **body.begin();
+}
+
+int ClientProxy::getRadius() {
+	return radius;
+}
+
+void ClientProxy::setTarget(sf::Vector2f t) {
+	target = t;
 }

@@ -146,6 +146,7 @@ int main() {
 					sendingClient->second.resetPing();
 				}
 				else if (type == TypeOfMessage::Move) {
+					sendingClient->second.setTarget(sf::Vector2f(std::stoi(words[1]), std::stoi(words[2])));
 					for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 						if (it->second.id !=sendingClient->second.id ) {
 							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
@@ -217,7 +218,7 @@ int main() {
 		if (timeLastResend > ResendTime) {
 			for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 				for (std::map<int, std::string>::iterator itMsg = it->second.outMessages.begin(); itMsg != it->second.outMessages.end(); ++itMsg) {
-					std::cout << "ResendingMsg id: " + itMsg->second+"\n";
+					std::cout << "ResendingMsg:	" + itMsg->second+"\n";
 					sendNormal(itMsg->second, &socket, it->first);
 				}
 			}
@@ -258,11 +259,21 @@ int main() {
 #pragma region Update
 		if (gameStarted) {
 			for (std::map <Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-				it->second.movePlayer(deltaTime.asSeconds());
+				if (it->second.isAlive) {
+					it->second.movePlayer(deltaTime.asSeconds());
+					if (mapa.isPlayerOutside(it->second.getHeadPos(), it->second.getRadius())) {
+						it->second.isAlive = false;
+						for (std::map <Address, ClientProxy>::iterator it2 = clients.begin(); it2 != clients.end(); ++it2) {
+							std::string s = std::to_string(TypeOfMessage::Kill) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(it->second.id);
+							sendNew(s, &socket, idOutMsg, it2->first, &it2->second.outMessages);
+						}
+					}
+				}
 			}
 		}
-		if (clients.size() == 0) {
+		if (clients.size() == 0 && gameStarted) {
 			gameStarted = false;
+			std::cout << "Partida acabada, serverReiniciado\n";
 		}
 #pragma endregion
 
