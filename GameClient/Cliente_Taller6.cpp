@@ -193,10 +193,12 @@ int main() {
 			}
 			else if (type == TypeOfMessage::Move) {
 				int idPlayerMove = std::stoi(words[1]);
-				std::map<int,Player*>::iterator p = players.find(idPlayerMove);
-				if (p != players.end() ){
+				
+				std::map<int, Player*>::iterator p = players.find(idPlayerMove);
+				if (p != players.end()) {
 					p->second->setTarget(sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
 				}
+				
 			}
 			else if (type == TypeOfMessage::Food) {
 				sf::CircleShape* newFood = new sf::CircleShape(8);

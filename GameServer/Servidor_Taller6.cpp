@@ -94,6 +94,7 @@ int main() {
 	std::map<Address, ClientProxy> clients;
 	std::thread myThread;
 	std::queue<InMsg> msgList;
+	std::vector<InMsg> moveMsgList;
 	int idOutMsg = 0;
 	//Vinculamos este socket al puerto 50000
 	if (receiveSocket.bind(50000) != sf::Socket::Done) {
@@ -112,13 +113,14 @@ int main() {
 	sf::Time deltaTime;
 	sf::Time lastFrameTime = sf::milliseconds(0);
 
+	sf::Time timeLastSendMoveMsg = sf::milliseconds(0);
 	sf::Time timeLastResend = sf::milliseconds(0);
 	sf::Time timeLastPing = sf::milliseconds(0);
 
 	bool open = true;
 	bool gameStarted = false;
 	//cambiar esta variable para cambiar el numero de jugadores necesarios para empezar una partida
-	int numberOfPlayers = 2;
+	int numberOfPlayers = 4;
 	myThread = std::thread(&myReceiveFunction, &receiveSocket, &msgList, &open); //abrimos el thread para el receive
 
 	ServerMap mapa(sf::Vector2i(800, 600));
@@ -148,13 +150,9 @@ int main() {
 					sendingClient->second.resetPing();
 				}
 				else if (type == TypeOfMessage::Move) {
+					InMsg moveMsg = msg;
+					moveMsgList.push_back(moveMsg);
 					sendingClient->second.setTarget(sf::Vector2f(std::stoi(words[1]), std::stoi(words[2])));
-					for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-						if (it->second.id !=sendingClient->second.id ) {
-							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
-							sendNormal(s, &socket, it->first);
-						}
-					}
 				}
 				else if (type == TypeOfMessage::Disconnect) {
 					int id = clients.find(msg.addr)->second.id;
@@ -214,6 +212,23 @@ int main() {
 			msgList.pop();
 			msgOnList = !msgList.empty();
 			mu.unlock();
+		}
+#pragma endregion
+
+#pragma region
+		//enviar moveMsg
+		timeLastSendMoveMsg += deltaTime;
+		if (!moveMsgList.empty() && timeLastSendMoveMsg > SendMoveMsgTime) {
+			//send last move msg (target)
+			std::vector<std::string> words = commandToWords(moveMsgList.back().msg);
+			std::map<Address, ClientProxy>::iterator sendingClient = clients.find(moveMsgList.back().addr);
+			for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+				if (it->second.id != sendingClient->second.id) {
+					std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
+					sendNormal(s, &socket, it->first);
+				}
+			}
+			moveMsgList.clear();
 		}
 #pragma endregion
 #pragma region Resend
