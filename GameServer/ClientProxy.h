@@ -1,11 +1,13 @@
 #pragma once
+#define _USE_MATH_DEFINES
 #include "timeDefines.h"
 #include <string>
 #include <map>
 #include "ServerMap.h"
 #include <utils.h>
+#include <PlayerBase.h>
 
-class ClientProxy {
+class ClientProxy : public PlayerBase {
 public:
 	std::string nickname;
 	sf::Vector2f pos;
@@ -13,8 +15,11 @@ public:
 	sf::Time timeSincePing;
 	int id;
 	std::map<int, std::string> outMessages;
-
 	
+	//movimiento
+	std::list<sf::Vector2f*>body;
+	sf::Vector2f* tail;
+
 
 	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer);
 
@@ -24,5 +29,5 @@ public:
 
 	void addOutMsg(std::string s, int id);
 
-	void movePlayer(sf::Vector2f target, float delta);
+	void movePlayer(float delta);
 };

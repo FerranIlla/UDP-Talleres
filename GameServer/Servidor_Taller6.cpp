@@ -116,6 +116,8 @@ int main() {
 	sf::Time timeLastPing = sf::milliseconds(0);
 
 	bool open = true;
+	bool gameStarted = false;
+	int numberOfPlayers = 2;
 	myThread = std::thread(&myReceiveFunction, &receiveSocket, &msgList, &open); //abrimos el thread para el receive
 
 	ServerMap mapa(sf::Vector2i(800, 600));
@@ -146,7 +148,7 @@ int main() {
 				else if (type == TypeOfMessage::Move) {
 					for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 						if (it->second.id !=sendingClient->second.id ) {
-							std::string s = TypeOfMessage::Move + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
+							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
 							sendNormal(s, &socket, it->first);
 						}
 					}
@@ -175,19 +177,31 @@ int main() {
 #pragma region Non Existing Client
 			else {//si no existe el cliente
 				if (std::stoi(words[0]) == TypeOfMessage::Hello) {
-					ClientProxy newClient(&mapa, msg.addr, msg.msg, disponiblePlayerIds.front());
-					//
-					for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-						std::string s = std::to_string(TypeOfMessage::NewPlayer) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(disponiblePlayerIds.front()) + "_" + std::to_string(newClient.pos.x) + "_" + std::to_string(newClient.pos.y);
-						sendNew(s, &socket, idOutMsg, (*it).first, &it->second.outMessages);
-						s = std::to_string(TypeOfMessage::NewPlayer) + "_" + std::to_string(idOutMsg) + "_" + std::to_string((*it).second.id) + "_" + std::to_string((*it).second.pos.x) + "_" + std::to_string((*it).second.pos.y);
-						sendNew(s, &socket, idOutMsg, newClient.address, &newClient.outMessages);
-					}
+					if (!gameStarted) {
+						ClientProxy newClient(&mapa, msg.addr, msg.msg, disponiblePlayerIds.front());
+						//
+						for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+							std::string s = std::to_string(TypeOfMessage::NewPlayer) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(disponiblePlayerIds.front()) + "_" + std::to_string(newClient.pos.x) + "_" + std::to_string(newClient.pos.y);
+							sendNew(s, &socket, idOutMsg, (*it).first, &it->second.outMessages);
+							s = std::to_string(TypeOfMessage::NewPlayer) + "_" + std::to_string(idOutMsg) + "_" + std::to_string((*it).second.id) + "_" + std::to_string((*it).second.pos.x) + "_" + std::to_string((*it).second.pos.y);
+							sendNew(s, &socket, idOutMsg, newClient.address, &newClient.outMessages);
+						}
 
-					std::string s = std::to_string(TypeOfMessage::Hello) + "_" + std::to_string(disponiblePlayerIds.front()) + "_" + std::to_string(newClient.pos.x) + "_" + std::to_string(newClient.pos.y);
-					disponiblePlayerIds.pop();
-					sendNormal(s, &socket, newClient.address);
-					clients.emplace(msg.addr, newClient);
+						std::string s = std::to_string(TypeOfMessage::Hello) + "_" + std::to_string(disponiblePlayerIds.front()) + "_" + std::to_string(newClient.pos.x) + "_" + std::to_string(newClient.pos.y);
+						disponiblePlayerIds.pop();
+						sendNormal(s, &socket, newClient.address);
+						clients.emplace(msg.addr, newClient);
+						if (clients.size() == numberOfPlayers) {
+							gameStarted = true;
+							std::cout << "Empieza la partida\n";
+							
+							for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+								s = std::to_string(TypeOfMessage::GameStart) + "_" + std::to_string(idOutMsg);
+								sendNew(s, &socket, idOutMsg, it->first, &it->second.outMessages);
+							}
+						}
+
+					}
 				}
 			}
 #pragma endregion
@@ -203,7 +217,7 @@ int main() {
 		if (timeLastResend > ResendTime) {
 			for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 				for (std::map<int, std::string>::iterator itMsg = it->second.outMessages.begin(); itMsg != it->second.outMessages.end(); ++itMsg) {
-					std::cout << "ResendingMsg id: " + std::to_string(itMsg->first);
+					std::cout << "ResendingMsg id: " + itMsg->second+"\n";
 					sendNormal(itMsg->second, &socket, it->first);
 				}
 			}
@@ -240,6 +254,18 @@ int main() {
 			}
 		}
 #pragma endregion
+
+#pragma region Update
+		if (gameStarted) {
+			for (std::map <Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+				it->second.movePlayer(deltaTime.asSeconds());
+			}
+		}
+		if (clients.size() == 0) {
+			gameStarted = false;
+		}
+#pragma endregion
+
 	}
 
 

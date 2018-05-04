@@ -124,6 +124,7 @@ int main() {
 	sf::Time timeLastMoveSend = sf::milliseconds(0);
 	sf::Vector2f mousePos(0,0);
 	int myId=-1;
+	bool gameStarted = false;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
@@ -141,12 +142,14 @@ int main() {
 			case sf::Event::MouseMoved:
 				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
 				if (myId != -1) {
-
-					std::map <int, Player*>::iterator p = players.find(myId);
-					p->second->setTarget(mousePos);
-					if (timeLastMoveSend > sendMovementTime) {
-						std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(evento.mouseMove.x) + "_" + std::to_string(evento.mouseMove.y);
-						sendNormal(s, &socket);
+					if (gameStarted) {
+						std::map <int, Player*>::iterator p = players.find(myId);
+						p->second->setTarget(mousePos);
+						if ((timeLastMoveSend > sendMovementTime)) {
+							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(evento.mouseMove.x) + "_" + std::to_string(evento.mouseMove.y);
+							sendNormal(s, &socket);
+							timeLastMoveSend -= sendMovementTime;
+						}
 					}
 				}
 				break;
@@ -193,11 +196,12 @@ int main() {
 				std::cout << "Otro player conectado\n";
 				int id = std::stoi(words[2]);
 				if (players.find(id) == players.end()) {
-					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id, sf::Vector2f(std::stoi(words[5]), std::stoi(words[6])));
+					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id, sf::Vector2f(std::stoi(words[3]), std::stoi(words[4])));
 					players.emplace(id, player);
 					sendAck(std::stoi(words[1]), &socket);
 				}
 				else {
+					std::cout << "Es un reenvio\n";
 					sendAck(std::stoi(words[1]), &socket);
 				}
 			}
@@ -218,6 +222,11 @@ int main() {
 				players.emplace(myId, player);
 				outMessages.erase(0); //borramos el Hello
 
+			}
+			else if (type == TypeOfMessage::GameStart) {
+				std::cout << "Empieza la partida\n";
+				gameStarted = true;
+				sendAck(std::stoi(words[1]),&socket);
 			}
 			else if (type == TypeOfMessage::Kill) {
 				//comprovar si el idPlayer que se ha recibido == myId
@@ -241,10 +250,11 @@ int main() {
 		}
 #pragma endregion
 #pragma region UpdatePlayers
-		
-		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
-			//it->second->setTarget(sf::Vector2f(0, 0));
-			(*it).second->update(deltaTime.asSeconds());
+		if (gameStarted) {
+			for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
+				//it->second->setTarget(sf::Vector2f(0, 0));
+				(*it).second->update(deltaTime.asSeconds());
+			}
 		}
 #pragma endregion
 

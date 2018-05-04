@@ -2,7 +2,6 @@
 
 
 Player::Player(sf::Vector2i position, sf::Color c, float rad,int i, sf::Vector2f tar) {
-	radius = rad;
 	//setup Parameters
 	len = 5;
 	radius = 15;
