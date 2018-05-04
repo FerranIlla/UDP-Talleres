@@ -6,6 +6,7 @@
 #include <queue>
 #include <mutex>
 #include "Mapa.h"
+#include "ClientMap.h"
 #include "utils.h"
 #include "PlayerClient.h"
 #include <thread>
@@ -128,6 +129,8 @@ int main() {
 	
 	//food
 	std::map<int, sf::CircleShape*> foods;
+	//borders
+	Walls walls;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
@@ -298,6 +301,8 @@ int main() {
 		for (std::map<int, sf::CircleShape*>::iterator it = foods.begin(); it != foods.end(); ++it) {
 			window.draw(*it->second);
 		}
+
+		walls.draw(&window);
 
 		window.display();
 		window.clear();

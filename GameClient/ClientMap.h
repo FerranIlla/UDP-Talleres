@@ -3,11 +3,11 @@
 #include <list>
 #include <iostream>
 #include <Mapa.h>
-class ClientMap:Map {
+class Walls {
 private:
-	std::list<sf::RectangleShape*> lines;
-	sf::CircleShape food;
+	std::list<sf::RectangleShape*> rectangles;
+	//sf::CircleShape food;
 public:
-	ClientMap(sf::Vector2u,sf::Vector2i);
+	Walls();
 	void draw(sf::RenderWindow*);
 };
