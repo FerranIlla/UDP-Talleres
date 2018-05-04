@@ -152,7 +152,7 @@ int main() {
 						std::map <int, Player*>::iterator p = players.find(myId);
 						p->second->setTarget(mousePos);
 						if ((timeLastMoveSend > sendMovementTime)) {
-							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(evento.mouseMove.x) + "_" + std::to_string(evento.mouseMove.y);
+							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string((int)evento.mouseMove.x) + "_" + std::to_string((int)evento.mouseMove.y);
 							sendNormal(s, &socket);
 							timeLastMoveSend -= sendMovementTime;
 						}
