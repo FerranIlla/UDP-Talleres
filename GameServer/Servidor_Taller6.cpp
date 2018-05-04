@@ -117,6 +117,7 @@ int main() {
 
 	bool open = true;
 	bool gameStarted = false;
+	//cambiar esta variable para cambiar el numero de jugadores necesarios para empezar una partida
 	int numberOfPlayers = 2;
 	myThread = std::thread(&myReceiveFunction, &receiveSocket, &msgList, &open); //abrimos el thread para el receive
 
@@ -273,8 +274,8 @@ int main() {
 						mapa.food.erase(idFoodEaten);
 						it->second.grow();
 					}
-					//si se sale del mapa
-					if (mapa.isPlayerOutside(it->second.getHeadPos(), it->second.getRadius())) {
+					//si se sale del mapa o choca con otro jugador
+					if (mapa.isPlayerOutside(it->second.getHeadPos(), it->second.getRadius()) || it->second.checkPlayersCollision(clients)) {
 						it->second.isAlive = false;
 						for (std::map <Address, ClientProxy>::iterator it2 = clients.begin(); it2 != clients.end(); ++it2) {
 							std::string s = std::to_string(TypeOfMessage::Kill) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(it->second.id);

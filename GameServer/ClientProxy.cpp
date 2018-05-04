@@ -105,6 +105,27 @@ int ClientProxy::checkFoodCollision(std::map<int, sf::Vector2f*>&foods) {
 	return -1;
 }
 
+bool ClientProxy::checkPlayersCollision(std::map<Address, ClientProxy>&players) {
+	for (std::map<Address, ClientProxy>::iterator it = players.begin(); it != players.end(); ++it) {
+		if (it->second.id!=id && it->second.isAlive) {
+			sf::Vector2f distanceHeads = it->second.getHeadPos() - getHeadPos();
+			
+			if (length(distanceHeads) < (followDistance * 2* it->second.len)) {
+				for (std::list<sf::Vector2f*>::iterator bodypoint = it->second.body.begin();bodypoint!=it->second.body.end() ; ++bodypoint) {
+					sf::Vector2f distanceHeadPoint = **bodypoint - this->getHeadPos();
+					//cambiar el 1.5 para cambiar el offset que se pueden atravesar 2 gusanos (mas bajo mas se pueden atravesar)
+					if (length(distanceHeadPoint) < radius*1.5) {
+						return true;
+					}
+				}
+			}
+		}
+
+	}
+	return false;
+}
+
+
 void ClientProxy::grow() {
 	len += 3;
 	for (int i = 0; i < 3; i++) {

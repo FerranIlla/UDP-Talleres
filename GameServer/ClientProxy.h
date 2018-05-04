@@ -32,6 +32,8 @@ public:
 	void movePlayer(float delta);
 
 	int checkFoodCollision(std::map<int, sf::Vector2f*>&foods);
+	bool checkPlayersCollision(std::map<Address, ClientProxy>&player);
+
 	void grow();
 
 	sf::Vector2f getHeadPos();
