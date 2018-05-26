@@ -6,6 +6,7 @@
 #include <queue>
 #include <mutex>
 #include "Mapa.h"
+#include "ClientMap.h"
 #include "utils.h"
 #include "PlayerClient.h"
 #include <thread>
@@ -128,6 +129,8 @@ int main() {
 	
 	//food
 	std::map<int, sf::CircleShape*> foods;
+	//borders
+	Walls walls;
 
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
@@ -149,7 +152,7 @@ int main() {
 						std::map <int, Player*>::iterator p = players.find(myId);
 						p->second->setTarget(mousePos);
 						if ((timeLastMoveSend > sendMovementTime)) {
-							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(evento.mouseMove.x) + "_" + std::to_string(evento.mouseMove.y);
+							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string((int)evento.mouseMove.x) + "_" + std::to_string((int)evento.mouseMove.y);
 							sendNormal(s, &socket);
 							timeLastMoveSend -= sendMovementTime;
 						}
@@ -190,10 +193,12 @@ int main() {
 			}
 			else if (type == TypeOfMessage::Move) {
 				int idPlayerMove = std::stoi(words[1]);
-				std::map<int,Player*>::iterator p = players.find(idPlayerMove);
-				if (p != players.end() ){
+				
+				std::map<int, Player*>::iterator p = players.find(idPlayerMove);
+				if (p != players.end()) {
 					p->second->setTarget(sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
 				}
+				
 			}
 			else if (type == TypeOfMessage::Food) {
 				sf::CircleShape* newFood = new sf::CircleShape(8);
@@ -298,6 +303,8 @@ int main() {
 		for (std::map<int, sf::CircleShape*>::iterator it = foods.begin(); it != foods.end(); ++it) {
 			window.draw(*it->second);
 		}
+
+		walls.draw(&window);
 
 		window.display();
 		window.clear();
