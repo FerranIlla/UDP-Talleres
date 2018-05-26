@@ -280,6 +280,7 @@ int main() {
 						for (std::map <Address, ClientProxy>::iterator it2 = clients.begin(); it2 != clients.end(); ++it2) {
 							std::string s = std::to_string(TypeOfMessage::Kill) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(it->second.id);
 							sendNew(s, &socket, idOutMsg, it2->first, &it2->second.outMessages);
+							
 						}
 					}
 				}

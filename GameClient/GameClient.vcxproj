@@ -157,11 +157,18 @@
   <ItemGroup>
     <ClCompile Include="Cliente_Taller6.cpp" />
     <ClCompile Include="ClientMap.cpp" />
+    <ClCompile Include="NetworkFunctions.cpp" />
     <ClCompile Include="PlayerClient.cpp" />
+    <ClCompile Include="SceneGame.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientMap.h" />
+    <ClInclude Include="NetworkFunctions.h" />
     <ClInclude Include="PlayerClient.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneGame.h" />
+    <ClInclude Include="SceneManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
