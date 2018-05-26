@@ -120,7 +120,7 @@ int main() {
 	bool open = true;
 	bool gameStarted = false;
 	//cambiar esta variable para cambiar el numero de jugadores necesarios para empezar una partida
-	int numberOfPlayers = 4;
+	int numberOfPlayers = 2;
 	myThread = std::thread(&myReceiveFunction, &receiveSocket, &msgList, &open); //abrimos el thread para el receive
 
 	ServerMap mapa(sf::Vector2i(800, 600));

@@ -1,88 +1,15 @@
 #define _USE_MATH_DEFINES
 #include <SFML\Graphics.hpp>
-#include <SFML\Network.hpp>
 #include <iostream>
-#include <map>
-#include <queue>
-#include <mutex>
 #include "Mapa.h"
-#include "ClientMap.h"
-#include "utils.h"
 #include "PlayerClient.h"
 #include <thread>
-
-typedef outMsgClient outMsg;
-
-#define MaxDataRecived 100
-#define ServerAdress "127.0.0.1"
-#define ResendTime sf::milliseconds(250)
-#define sendMovementTime sf::milliseconds(150)
-#define MaxIdMsg 255
+#include "NetworkFunctions.h"
+#include "ClientMap.h"
+#include "SceneManager.h"	
+#include "SceneGame.h"
 
 std::mutex mu;
-
-void sendNew(std::string s, sf::UdpSocket* socket, int &id, std::map<int, outMsg>* outMessages) {
-	bool errorInSend = false;
-	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
-		errorInSend = (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done);
-	}
-	else {
-		std::cout << "Paquete perdido. " << std::endl;
-	}
-
-	if (errorInSend) std::cout << "Ha habido un problema al enviar\n";
-	else {
-		outMsg msg(s);
-		outMessages->emplace(id, msg);
-		id = (id + 1) % MaxIdMsg;
-	}
-}
-
-void sendAck(int id, sf::UdpSocket* socket) {
-	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
-		std::string s = std::to_string(TypeOfMessage::Ack) + "_" + std::to_string(id);
-		if (socket->send(&s[0], s.length(), ServerAdress, 50000) != sf::Socket::Done) {
-			std::cout << "Ha habido un problema al enviar\n";
-		}
-	}
-	else {
-		std::cout << "Paquete perdido. " << std::endl;
-	}
-}
-
-void sendNormal(std::string msg, sf::UdpSocket* socket) {
-	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
-		if (socket->send(msg.c_str(), msg.length(), ServerAdress, 50000) != sf::Socket::Done) {
-			std::cout << "Ha habido un problema al enviar\n";
-		}
-	}
-	else {
-		std::cout << "Paquete perdido." << std::endl;
-	}
-}
-
-void receive(sf::UdpSocket* socket, std::queue<std::string>* msgList, sf::RenderWindow* window) {
-	char data[MaxDataRecived];
-	sf::IpAddress adress;
-	unsigned short port;
-	std::size_t received;
-	while (window->isOpen()) {
-		if (socket->receive(data, MaxDataRecived, received, adress, port) == sf::Socket::Done) {
-			if (adress == ServerAdress) {
-				data[received] = '\0';
-				mu.lock();
-				//std::cout << "Recivido: " << data << std::endl;
-				msgList->emplace(data);
-				mu.unlock();
-			}
-		}
-		else {
-			mu.lock();
-			std::cout << "Error al recivir\n";
-			mu.unlock();
-		}
-	}
-}
 
 
 
@@ -117,161 +44,34 @@ int main() {
 
 	//gameplay______________________________________________________________________________________________
 	//Map mapa(window.getSize(), sf::Vector2i(8, 6));
-	std::map <int, Player*>players;
+	//std::map <int, Player*>players;
 	sf::Clock timer;
 	sf::Time deltaTime;
 	sf::Time lastFrameTime = sf::milliseconds(0);
 	sf::Time timeLastResend = sf::milliseconds(0);
-	sf::Time timeLastMoveSend = sf::milliseconds(0);
+	int myId = -1;
+	SceneManager::Instance().scene = new SceneGame(&socket, &serverMessages, &outMessages, myId, msgId, playerNick);
+	/*
 	sf::Vector2f mousePos(0,0);
-	int myId=-1;
+	
 	bool gameStarted = false;
 	
 	//food
 	std::map<int, sf::CircleShape*> foods;
 	//borders
 	Walls walls;
-
+	*/
 	std::thread thread = std::thread(&receive, &socket, &serverMessages, &window); //abrimos el thread para el receive
 
 	while (window.isOpen()) {
 		deltaTime = timer.restart() - lastFrameTime;
-		timeLastMoveSend += deltaTime;
+		
 #pragma region  Input
-		sf::Event evento;
-		while (window.pollEvent(evento)) {
-			switch (evento.type) {
-			case sf::Event::Closed:
-				sendNormal(std::to_string(TypeOfMessage::Disconnect), &socket);
-				window.close();
-				break;
-			case sf::Event::MouseMoved:
-				mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
-				if (myId != -1) {
-					if (gameStarted) {
-						std::map <int, Player*>::iterator p = players.find(myId);
-						p->second->setTarget(mousePos);
-						if ((timeLastMoveSend > sendMovementTime)) {
-							std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string((int)evento.mouseMove.x) + "_" + std::to_string((int)evento.mouseMove.y);
-							sendNormal(s, &socket);
-							timeLastMoveSend -= sendMovementTime;
-						}
-					}
-				}
-				break;
-			case sf::Event::KeyPressed:
-				if (evento.key.code == sf::Keyboard::Return) {
-					/*std::string msg = "newP_";
-					msg = msg + std::to_string(rand() % 4);
-					msg = msg + "_" + std::to_string(rand() % mapa.getSize().x);
-					msg = msg + "_" + std::to_string(rand() % mapa.getSize().y);
-
-					serverMessages.emplace(msg);*/
-					players.find(myId)->second->grow();
-				}
-				break;
-			default:
-				break;
-			}
-		}
-
+		SceneManager::Instance().scene->checkInput(&window, deltaTime);
 #pragma endregion
 
 #pragma region Mensajes recibidos
-
-		while (!serverMessages.empty()) {
-			mu.lock();
-			std::vector<std::string> words = commandToWords(serverMessages.front());
-			mu.unlock();
-			TypeOfMessage type = (TypeOfMessage)std::stoi(words[0]);
-			if (type == TypeOfMessage::Ack) {
-				outMessages.erase(std::stoi(words[1]));
-			}
-			else if (type == TypeOfMessage::Ping) {
-				//std::cout << "Ping Recivido";
-				sendNormal(std::to_string(TypeOfMessage::Ping), &socket);
-			}
-			else if (type == TypeOfMessage::Move) {
-				int idPlayerMove = std::stoi(words[1]);
-				
-				std::map<int, Player*>::iterator p = players.find(idPlayerMove);
-				if (p != players.end()) {
-					p->second->setTarget(sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
-				}
-				
-			}
-			else if (type == TypeOfMessage::Food) {
-				sf::CircleShape* newFood = new sf::CircleShape(8);
-				newFood->setFillColor(sf::Color(255, 255, 255, 200));
-				newFood->setPosition(std::stoi(words[3]), std::stoi(words[4]));
-				foods.emplace(std::stoi(words[2]), newFood);
-				sendAck(std::stoi(words[1]), &socket);
-			}
-			else if (type == TypeOfMessage::Grow) {
-				if (foods.find(std::stoi(words[3])) != foods.end()) {
-					players.find(std::stoi(words[2]))->second->grow();
-					foods.erase(std::stoi(words[3]));
-					sendAck(std::stoi(words[1]), &socket);
-				}
-				else {
-					sendAck(std::stoi(words[1]), &socket);
-				}
-			}
-			else if (type == TypeOfMessage::NewPlayer) {
-				std::cout << "Otro player conectado\n";
-				int id = std::stoi(words[2]);
-				if (players.find(id) == players.end()) {
-					Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id, sf::Vector2f(std::stoi(words[3]), std::stoi(words[4])));
-					players.emplace(id, player);
-					sendAck(std::stoi(words[1]), &socket);
-				}
-				else {
-					std::cout << "Es un reenvio\n";
-					sendAck(std::stoi(words[1]), &socket);
-				}
-			}
-			else if (type == TypeOfMessage::Disconnect) {
-				if (std::stoi(words[1]) == myId) {
-					std::cout << "Has sido desconectado\n";
-					window.close();
-				}
-				else {
-					players.erase(std::stoi(words[1]));
-					sendAck(std::stoi(words[2]), &socket);
-				}
-			}
-			else if (type == TypeOfMessage::Hello) {
-				std::cout << "Welcome recivido\n";
-				myId = std::stoi(words[1]);
-				Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), 10, myId, sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
-				players.emplace(myId, player);
-				outMessages.erase(0); //borramos el Hello
-
-			}
-			else if (type == TypeOfMessage::GameStart) {
-				std::cout << "Empieza la partida\n";
-				gameStarted = true;
-				sendAck(std::stoi(words[1]),&socket);
-			}
-			else if (type == TypeOfMessage::Kill) {
-				int idPlayerKill = std::stoi(words[2]);
-				std::map<int, Player*>::iterator p = players.find(idPlayerKill);
-				if (p != players.end()) {
-					if (p->second->isAlive) {
-						p->second->isAlive = false;
-						sendAck(std::stoi(words[1]), &socket);
-						if (idPlayerKill == myId) {
-							std::cout << "Has perdido!\n";
-						}
-					}
-					else {
-						sendAck(std::stoi(words[1]), &socket);
-					}
-				}
-			}
-			serverMessages.pop();
-		}
-
+		SceneManager::Instance().scene->checkReceivedMsg(&window);
 #pragma endregion
 
 #pragma region CheckearReenvio de mensajes
@@ -285,26 +85,12 @@ int main() {
 		}
 #pragma endregion
 #pragma region UpdatePlayers
-		if (gameStarted) {
-			for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
-				//it->second->setTarget(sf::Vector2f(0, 0));
-				(*it).second->update(deltaTime.asSeconds());
-			}
-		}
+		SceneManager::Instance().scene->Update(deltaTime);
 #pragma endregion
 
 #pragma region Draw
-		//mapa.draw(&window);
+		SceneManager::Instance().scene->draw(&window);
 
-		for (std::map <int, Player*>::iterator it = players.begin(); it != players.end(); ++it) {
-			(*it).second->draw(&window);
-		}
-
-		for (std::map<int, sf::CircleShape*>::iterator it = foods.begin(); it != foods.end(); ++it) {
-			window.draw(*it->second);
-		}
-
-		walls.draw(&window);
 
 		window.display();
 		window.clear();
@@ -312,7 +98,6 @@ int main() {
 
 
 	}
-	players.clear();
 	thread.join();
 
 }

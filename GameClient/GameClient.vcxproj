@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="Cliente_Taller6.cpp" />
     <ClCompile Include="ClientMap.cpp" />
+    <ClCompile Include="MainMenuScene.cpp" />
     <ClCompile Include="NetworkFunctions.cpp" />
     <ClCompile Include="PlayerClient.cpp" />
     <ClCompile Include="SceneGame.cpp" />
@@ -164,6 +165,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientMap.h" />
+    <ClInclude Include="MainMenuScene.h" />
     <ClInclude Include="NetworkFunctions.h" />
     <ClInclude Include="PlayerClient.h" />
     <ClInclude Include="Scene.h" />
