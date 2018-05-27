@@ -79,3 +79,7 @@ std::string Button::isClicked() {
 	}
 	return "";
 }
+
+bool Button::isSelected() {
+	return state == pressed;
+}

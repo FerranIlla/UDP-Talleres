@@ -2,6 +2,8 @@
 #include "Scene.h"
 #include "SceneGame.h"
 #include "MainMenuScene.h"
+#include "JoinGameScene.h"
+#include "CreateGameScene.h"
 
 class SceneManager {
 public:
@@ -18,5 +20,7 @@ public:
 
 	void changeToSceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
 	void changeToMenu(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
+	void changeToJoin(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
+	void changeToCreate(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
 
 };

@@ -10,8 +10,8 @@ LoginScene::LoginScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::
 	mousePos = sf::Vector2f(0, 0);
 	registerScreen = false;
 
-	btn_Login = new Button("Login", "login", sf::Vector2f(200, 250), sf::Vector2f(100, 30), font, 20);
-	btn_Register = new Button("Register", "register", sf::Vector2f(200, 310), sf::Vector2f(100, 30), font, 20);
+	btn_Login = new Button(" Login", "login", sf::Vector2f(200, 250), sf::Vector2f(100, 30), font, 20);
+	btn_Register = new Button(" Register", "register", sf::Vector2f(200, 310), sf::Vector2f(100, 30), font, 20);
 
 
 	txt_nickname = sf::Text("Username: " + nicknameInput, font, 20);
@@ -47,10 +47,17 @@ void LoginScene::checkInput(sf::RenderWindow* window, sf::Time deltaTime) {
 			break;
 		case sf::Event::KeyPressed:
 			if (evento.key.code == sf::Keyboard::Return) {
-				if (nicknameInput.getSize() > 0 && passwordInput.getSize() > 0) {
-					std::string msj = "login_" + nicknameInput + "_" + passwordInput; //TODO CANVIAR LA PARAULA
-					//sendNew(msj, socket, msgId, outMessages);
-					std::cout << "sending nick\n";
+				if (btn_Login->isSelected() || btn_Register->isSelected()) {
+					if (nicknameInput.getSize() > 0 && passwordInput.getSize() > 0) {
+						std::string msj = "login_" + nicknameInput + "_" + passwordInput; //TODO CANVIAR EL MSJ DEL SEND
+						//sendNew(msj, socket, msgId, outMessages);
+						std::cout << "sending nick\n";
+
+						//aixo es provisional. S'haura de treure
+						myId = 1;
+						playerNick = nicknameInput;
+						SceneManager::Instance().changeToMenu(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
+					}
 				}
 				
 			}

@@ -32,5 +32,6 @@ public:
 	void unblock();
 
 	std::string isClicked();
+	bool isSelected();
 
 };

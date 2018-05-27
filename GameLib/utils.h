@@ -85,3 +85,15 @@ enum TypeOfMessage :int8_t {
 float getRandomFloat();
 
 bool percentageGate(float percentageLost);
+
+struct GameData {
+	std::string gameName;
+	int maxPlayers;
+	int currentPlayers;
+	std::string creatorName;
+
+	std::string displayData() {
+		std::string data = " "+gameName + "\n Players: " + std::to_string(currentPlayers) + "/" + std::to_string(maxPlayers) + "\n Creator: " + creatorName;
+		return data;
+	}
+};

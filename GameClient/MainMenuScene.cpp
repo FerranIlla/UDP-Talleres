@@ -10,14 +10,18 @@ MainMenuScene::MainMenuScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg,
 	font = f;
 
 	mousePos = sf::Vector2f(0, 0);
-	seeListOfGames = true;
 
-	btn_Start = new Button("Start Game", "temp", sf::Vector2f(355, 52), sf::Vector2f(70, 48), font, 18);
+	txt_nick = sf::Text(playerNick, font, 18);
+	txt_nick.setPosition(10, 10);
+
+	btn_CreateGame = new Button("    Create Game", "create", sf::Vector2f(300, 250), sf::Vector2f(200, 30), font, 18);
+	btn_JoinGame = new Button("    Join Game", "join", sf::Vector2f(300, 200), sf::Vector2f(200, 30), font, 18);
 }
 
 void MainMenuScene::Update(sf::Time deltaTime) {
 	//update button states
-	btn_Start->update(mousePos);
+	btn_CreateGame->update(mousePos);
+	btn_JoinGame->update(mousePos);
 }
 void  MainMenuScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 	sf::Event evento;
@@ -30,8 +34,11 @@ void  MainMenuScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 			mousePos = sf::Vector2f(evento.mouseMove.x, evento.mouseMove.y);
 			break;
 		case sf::Event::MouseButtonPressed:
-			if (btn_Start->checkClick(mousePos)) {
-				SceneManager::Instance().changeToSceneGame(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
+			if (btn_CreateGame->checkClick(mousePos)) {
+				//SceneManager::Instance().changeToSceneGame(socket, serverMessages, outMessages, myId, msgId, playerNick, font); //createScene
+			}
+			if (btn_JoinGame->checkClick(mousePos)) {
+				SceneManager::Instance().changeToJoin(socket, serverMessages, outMessages, myId, msgId, playerNick, font); //joinScene
 			}
 
 			break;
@@ -61,6 +68,7 @@ void  MainMenuScene::checkReceivedMsg(sf::RenderWindow*window) {
 }
 
 void  MainMenuScene::draw(sf::RenderWindow*window) {
-	btn_Start->draw(window);
-
+	window->draw(txt_nick);
+	btn_CreateGame->draw(window);
+	btn_JoinGame->draw(window);
 }

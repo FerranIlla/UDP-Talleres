@@ -9,7 +9,7 @@
 
 class SceneGame;
 
-class MainMenuScene:public Scene{
+class JoinGameScene :public Scene {
 private:
 	sf::UdpSocket* socket;
 	std::queue<std::string>* serverMessages;
@@ -20,12 +20,19 @@ private:
 	sf::Vector2f mousePos;
 	sf::Font font;
 
+	bool seeListOfGames;
+	std::vector<std::string> listOfGames;
+	std::vector<Button*> games;
+
+	Button* btn_Back;
+
 	sf::Text txt_nick;
 
-	Button* btn_CreateGame;
-	Button* btn_JoinGame;
+	sf::Time maxTimeUpdateList;
+	sf::Time timeSinceLastUpdateList;
+
 public:
-	MainMenuScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
+	JoinGameScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
 
 	void Update(sf::Time delta);
 	void checkInput(sf::RenderWindow*, sf::Time deltaTime);

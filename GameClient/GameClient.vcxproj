@@ -158,6 +158,8 @@
     <ClCompile Include="Button.cpp" />
     <ClCompile Include="Cliente_Taller6.cpp" />
     <ClCompile Include="ClientMap.cpp" />
+    <ClCompile Include="CreateGameScene.cpp" />
+    <ClCompile Include="JoinGameScenecpp.cpp" />
     <ClCompile Include="LoginScene.cpp" />
     <ClCompile Include="MainMenuScene.cpp" />
     <ClCompile Include="NetworkFunctions.cpp" />
@@ -168,6 +170,8 @@
   <ItemGroup>
     <ClInclude Include="Button.h" />
     <ClInclude Include="ClientMap.h" />
+    <ClInclude Include="CreateGameScene.h" />
+    <ClInclude Include="JoinGameScene.h" />
     <ClInclude Include="LoginScene.h" />
     <ClInclude Include="MainMenuScene.h" />
     <ClInclude Include="NetworkFunctions.h" />
