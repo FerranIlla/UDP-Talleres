@@ -83,3 +83,7 @@ std::string Button::isClicked() {
 bool Button::isSelected() {
 	return state == pressed;
 }
+
+bool Button::isBlocked() {
+	return state == blocked;
+}

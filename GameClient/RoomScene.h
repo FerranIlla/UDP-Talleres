@@ -9,7 +9,7 @@
 
 class SceneGame;
 
-class CreateGameScene :public Scene {
+class RoomScene :public Scene {
 private:
 	sf::UdpSocket* socket;
 	std::queue<std::string>* serverMessages;
@@ -20,18 +20,18 @@ private:
 	sf::Vector2f mousePos;
 	sf::Font font;
 
-
-	Button* btn_Back;
+	Button* btn_Leave;
 	sf::Text txt_nick;
 
-	sf::Text txt_players, txt_food;
-	int numberOfPlayers;
-	float foodRate;
-	Button* btn_Create;
-	Button* btn_playersMore, *btn_playersLess, *btn_foodMore, *btn_foodLess;
+	sf::Text txt_waiting;
+	
+	sf::String message;
+	std::vector<std::string> aMessages;
+	sf::Text txt_chat, txt_message;
+	sf::RectangleShape separator;
 
 public:
-	CreateGameScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
+	RoomScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
 
 	void Update(sf::Time delta);
 	void checkInput(sf::RenderWindow*, sf::Time deltaTime);

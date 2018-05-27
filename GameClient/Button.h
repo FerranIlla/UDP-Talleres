@@ -33,5 +33,6 @@ public:
 
 	std::string isClicked();
 	bool isSelected();
+	bool isBlocked();
 
 };

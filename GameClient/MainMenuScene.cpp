@@ -35,7 +35,7 @@ void  MainMenuScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 			break;
 		case sf::Event::MouseButtonPressed:
 			if (btn_CreateGame->checkClick(mousePos)) {
-				//SceneManager::Instance().changeToSceneGame(socket, serverMessages, outMessages, myId, msgId, playerNick, font); //createScene
+				SceneManager::Instance().changeToCreate(socket, serverMessages, outMessages, myId, msgId, playerNick, font); //createScene
 			}
 			if (btn_JoinGame->checkClick(mousePos)) {
 				SceneManager::Instance().changeToJoin(socket, serverMessages, outMessages, myId, msgId, playerNick, font); //joinScene

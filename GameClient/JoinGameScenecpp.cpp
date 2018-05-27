@@ -14,7 +14,7 @@ JoinGameScene::JoinGameScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg,
 	txt_nick = sf::Text(playerNick, font, 18);
 	txt_nick.setPosition(10, 10);
 
-	btn_Back = new Button(" Back", "back", sf::Vector2f(100, 550), sf::Vector2f(80, 30), font, 18);
+	btn_Back = new Button(" Back", "back", sf::Vector2f(20, 550), sf::Vector2f(80, 30), font, 18);
 
 	timeSinceLastUpdateList = sf::milliseconds(0);
 	maxTimeUpdateList = sf::milliseconds(10000); //cada 10 segundos
@@ -61,6 +61,7 @@ void  JoinGameScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 				if (games[i]->checkClick(mousePos)) {
 					//send start game
 					//change scene to gameScene or roomScene
+					//SceneManager::Instance().changeToRoom(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
 				}
 			}
 
@@ -86,7 +87,7 @@ void  JoinGameScene::checkReceivedMsg(sf::RenderWindow*window) {
 		sendNormal(std::to_string(TypeOfMessage::Ping), socket);
 		}*/
 		//if (type == TypeOfMessage::List)
-		//if (type == TypeOfMessage::Join) //recieve game info
+		//if (type == TypeOfMessage::Join) //recieve game info and changeToRoomScene
 		//if (type == TypeOfMessage::Error) //cant create or cant join
 
 		serverMessages->pop();
