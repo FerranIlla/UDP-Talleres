@@ -8,6 +8,7 @@
 #include "ClientMap.h"
 #include "SceneManager.h"	
 #include "SceneGame.h"
+#include "LoginScene.h"
 
 std::mutex mu;
 
@@ -30,12 +31,13 @@ int main() {
 	sf::UdpSocket socket;
 	int msgId = 0;
 
-
+	
 	std::cout << "Introduce un nickname:\n	";
 	std::string playerNick;
 	std::cin >> playerNick;
 	sendNew(std::to_string(TypeOfMessage::Hello) + "_" + playerNick, &socket, msgId, &outMessages);
 	std::cout << "nick enviado al servidor\n";
+	
 
 
 	sf::RenderWindow window;
@@ -50,7 +52,7 @@ int main() {
 	sf::Time lastFrameTime = sf::milliseconds(0);
 	sf::Time timeLastResend = sf::milliseconds(0);
 	int myId = -1;
-	SceneManager::Instance().scene = new SceneGame(&socket, &serverMessages, &outMessages, myId, msgId, playerNick);
+	SceneManager::Instance().scene = new LoginScene(&socket, &serverMessages, &outMessages, msgId, font);
 	/*
 	sf::Vector2f mousePos(0,0);
 	

@@ -1,12 +1,13 @@
 #include "SceneGame.h"
 
-SceneGame::SceneGame( sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick )  {
+SceneGame::SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f)  {
 	socket = sock;
 	serverMessages = sMsg;
 	outMessages = outMsg;
-	myId = pID;
 	msgId = msgid;
+	myId = pID;
 	playerNick = nick;
+	font = f;
 
 	timeLastMoveSend = sf::microseconds(0);
 	mousePos = sf::Vector2f(0, 0);
@@ -56,7 +57,7 @@ void SceneGame::checkInput(sf::RenderWindow* window, sf::Time deltaTime) {
 
 				serverMessages.emplace(msg);*/
 				//players.find(myId)->second->grow();
-				SceneManager::Instance().changeToMenu();
+				SceneManager::Instance().changeToMenu(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
 			}
 			break;
 		default:

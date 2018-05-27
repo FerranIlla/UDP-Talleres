@@ -1,4 +1,5 @@
 #pragma once
+#pragma once
 #include "Scene.h"
 #include "Button.h"
 #include <utils.h>
@@ -9,7 +10,7 @@
 
 class SceneGame;
 
-class MainMenuScene:public Scene{
+class LoginScene :public Scene {
 private:
 	sf::UdpSocket* socket;
 	std::queue<std::string>* serverMessages;
@@ -20,14 +21,22 @@ private:
 	sf::Vector2f mousePos;
 	sf::Font font;
 
-	bool seeListOfGames;
-	std::vector<std::string> listOfGames;
+	bool registerScreen;
+	
+	sf::String nicknameInput, passwordInput;
+	sf::Text txt_nickname;
+	sf::Text txt_password;
+	sf::Text txt_serverMsg;
 
-	Button* btn_Start;
-	//Button btn_CreateGame;
-	//Button btn_JoinGame;
+
+	sf::RectangleShape editUsername, editPassword;
+	bool editingUsername, editingPassword;
+
+	Button* btn_Login;
+	Button* btn_Register;
+	
 public:
-	MainMenuScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
+	LoginScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& msgid, sf::Font f);
 
 	void Update(sf::Time delta);
 	void checkInput(sf::RenderWindow*, sf::Time deltaTime);

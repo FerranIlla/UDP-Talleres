@@ -155,8 +155,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Button.cpp" />
     <ClCompile Include="Cliente_Taller6.cpp" />
     <ClCompile Include="ClientMap.cpp" />
+    <ClCompile Include="LoginScene.cpp" />
     <ClCompile Include="MainMenuScene.cpp" />
     <ClCompile Include="NetworkFunctions.cpp" />
     <ClCompile Include="PlayerClient.cpp" />
@@ -164,7 +166,9 @@
     <ClCompile Include="SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Button.h" />
     <ClInclude Include="ClientMap.h" />
+    <ClInclude Include="LoginScene.h" />
     <ClInclude Include="MainMenuScene.h" />
     <ClInclude Include="NetworkFunctions.h" />
     <ClInclude Include="PlayerClient.h" />

@@ -16,19 +16,20 @@ private:
 	std::queue<std::string>* serverMessages;
 	std::map<int, outMsg>* outMessages;
 	int msgId;
-
-	std::string playerNick;
-	std::map <int, Player*>players;
-	sf::Vector2f mousePos;
 	int myId;
+	std::string playerNick;
+	sf::Vector2f mousePos;
+	sf::Font font;
 
+	std::map <int, Player*>players;
+	
 	bool gameStarted;
 
 	std::map<int, sf::CircleShape*> foods;
 	Walls walls;
 	sf::Time timeLastMoveSend;
 public:
-	SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID ,int& msgid, std::string nick);
+	SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
 
 	void Update(sf::Time delta );
 	void checkInput(sf::RenderWindow*, sf::Time deltaTime);
