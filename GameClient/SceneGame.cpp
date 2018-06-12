@@ -1,6 +1,6 @@
 #include "SceneGame.h"
 
-SceneGame::SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f)  {
+SceneGame::SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f, std::string positions)  {
 	socket = sock;
 	serverMessages = sMsg;
 	outMessages = outMsg;
@@ -9,10 +9,25 @@ SceneGame::SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::ma
 	playerNick = nick;
 	font = f;
 
-	timeLastMoveSend = sf::microseconds(0);
+	timeLastMoveSend = sf::milliseconds(0);
 	mousePos = sf::Vector2f(0, 0);
 
-	gameStarted = false;
+	gameStarted = true;
+
+	std::vector<std::string> words = commandToWords(positions);
+	int numberOfPlayers = std::stoi(words[0]);
+	for (int i = 0; i < numberOfPlayers; i++) {
+
+		if (std::stoi(words[(i * 3) + 1])!=myId) {
+			Player* player = new Player(sf::Vector2i(std::stoi(words[(i * 3) + 2]), std::stoi(words[(i * 3) + 3])), sf::Color(0, 50, 255, 255), 10, std::stoi(words[(i * 3) + 1]), sf::Vector2f(std::stoi(words[(i * 3) + 2]), std::stoi(words[(i * 3) + 3])));
+			players.emplace(std::stoi(words[(i * 3) + 1]), player);
+		}
+		else {
+			Player* player = new Player(sf::Vector2i(std::stoi(words[(i * 3) + 2]), std::stoi(words[(i * 3) + 3])), sf::Color(255, 155, 0, 255), 10, std::stoi(words[(i * 3) + 1]), sf::Vector2f(std::stoi(words[(i * 3) + 2]), std::stoi(words[(i * 3) + 3])));
+			players.emplace(std::stoi(words[(i * 3) + 1]), player);
+		}
+	}
+
 
 }
 void SceneGame::Update(sf::Time deltaTime) {
@@ -105,19 +120,7 @@ void SceneGame::checkReceivedMsg(sf::RenderWindow* window) {
 				sendAck(std::stoi(words[1]), socket);
 			}
 		}
-		else if (type == TypeOfMessage::NewPlayer) {
-			std::cout << "Otro player conectado\n";
-			int id = std::stoi(words[2]);
-			if (players.find(id) == players.end()) {
-				Player* player = new Player(sf::Vector2i(std::stoi(words[3]), std::stoi(words[4])), sf::Color(0, 50, 255, 255), 10, id, sf::Vector2f(std::stoi(words[3]), std::stoi(words[4])));
-				players.emplace(id, player);
-				sendAck(std::stoi(words[1]), socket);
-			}
-			else {
-				std::cout << "Es un reenvio\n";
-				sendAck(std::stoi(words[1]),socket);
-			}
-		}
+		
 		else if (type == TypeOfMessage::Disconnect) {
 			if (std::stoi(words[1]) == myId) {
 				std::cout << "Has sido desconectado\n";
@@ -128,17 +131,9 @@ void SceneGame::checkReceivedMsg(sf::RenderWindow* window) {
 				sendAck(std::stoi(words[2]), socket);
 			}
 		}
-		else if (type == TypeOfMessage::Hello) {
-			std::cout << "Welcome recivido\n";
-			myId = std::stoi(words[1]);
-			Player* player = new Player(sf::Vector2i(std::stoi(words[2]), std::stoi(words[3])), sf::Color(255, 155, 0, 255), 10, myId, sf::Vector2f(std::stoi(words[2]), std::stoi(words[3])));
-			players.emplace(myId, player);
-			outMessages->erase(0); //borramos el Hello
-
-		}
 		else if (type == TypeOfMessage::GameStart) {
 			std::cout << "Empieza la partida\n";
-			gameStarted = true;
+			
 			sendAck(std::stoi(words[1]), socket);
 		}
 		else if (type == TypeOfMessage::Kill) {

@@ -18,18 +18,17 @@ JoinGameScene::JoinGameScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg,
 
 	timeSinceLastUpdateList = sf::milliseconds(0);
 	maxTimeUpdateList = sf::milliseconds(10000); //cada 10 segundos
-	//sendNew(list...) //ask for list
+	sendNew(std::to_string(TypeOfMessage::ListGames) + "_" + std::to_string(msgId), sock, msgId, outMessages); //ask for list
 
 
 	//temporal for test
+
+	/*
 	listOfGames.push_back("hola\n3/4\nadeu");
 	listOfGames.push_back("hola2\n0/2\nadeu");
-	listOfGames.push_back("hola3\n2/2\nadeu");
+	listOfGames.push_back("hola3\n2/2\nadeu");*/
 
-	for (int i = 0; i < listOfGames.size(); i++) {
-		Button* b = new Button(listOfGames[i], "game", sf::Vector2f(300, 100+90*i), sf::Vector2f(200, 70), font, 18);
-		games.push_back(b);
-	}
+	
 }
 
 void JoinGameScene::Update(sf::Time deltaTime) {
@@ -43,7 +42,7 @@ void JoinGameScene::Update(sf::Time deltaTime) {
 	timeSinceLastUpdateList += deltaTime;
 	if (timeSinceLastUpdateList > maxTimeUpdateList) {
 		timeSinceLastUpdateList = sf::milliseconds(0);
-		//sendNew(list...) //ask for list
+		sendNew(std::to_string(TypeOfMessage::ListGames) + "_" + std::to_string(msgId), socket, msgId, outMessages);
 	}
 }
 void  JoinGameScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
@@ -59,9 +58,9 @@ void  JoinGameScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 		case sf::Event::MouseButtonPressed:
 			for (int i = 0; i < games.size(); ++i) {
 				if (games[i]->checkClick(mousePos)) {
-					//send start game
+					sendNew(std::to_string(TypeOfMessage::JoinGame) + "_" + std::to_string(msgId) + "_" + std::to_string(gameIDs[i]), socket, msgId, outMessages);
 					//change scene to gameScene or roomScene
-					//SceneManager::Instance().changeToRoom(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
+					SceneManager::Instance().changeToRoom(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
 				}
 			}
 
@@ -82,11 +81,24 @@ void  JoinGameScene::checkReceivedMsg(sf::RenderWindow*window) {
 		if (type == TypeOfMessage::Ack) {
 			outMessages->erase(std::stoi(words[1]));
 		}
-		/*else if (type == TypeOfMessage::Ping) {
+		else if (type == TypeOfMessage::Ping) {
 		//std::cout << "Ping Recivido";
 		sendNormal(std::to_string(TypeOfMessage::Ping), socket);
-		}*/
-		//if (type == TypeOfMessage::List)
+		}
+		if (type == TypeOfMessage::ListGames) {
+			int numOfGames = std::stoi(words[1]);
+			listOfGames.clear();
+			games.clear();
+			for (int i = 0; i < numOfGames; i++) {
+				listOfGames.push_back(words[i + 2]);
+				i++;
+				gameIDs.push_back(std::stoi(words[i + 2]));
+			}
+			for (int i = 0; i < listOfGames.size(); i++) {
+				Button* b = new Button(listOfGames[i], "game", sf::Vector2f(300, 100 + 90 * i), sf::Vector2f(200, 70), font, 18);
+				games.push_back(b);
+			}
+		}
 		//if (type == TypeOfMessage::Join) //recieve game info and changeToRoomScene
 		//if (type == TypeOfMessage::Error) //cant create or cant join
 

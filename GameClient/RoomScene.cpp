@@ -93,11 +93,24 @@ void  RoomScene::checkReceivedMsg(sf::RenderWindow*window) {
 		if (type == TypeOfMessage::Ack) {
 			outMessages->erase(std::stoi(words[1]));
 		}
-		/*else if (type == TypeOfMessage::Ping) {
+		else if (type == TypeOfMessage::Ping) {
 		//std::cout << "Ping Recivido";
 		sendNormal(std::to_string(TypeOfMessage::Ping), socket);
-		}*/
-		//if (type == TypeOfMessage::Start) //changeToGameScene
+		}
+		else if (type == TypeOfMessage::NewPlayer) {
+			
+		}
+		else if (type == TypeOfMessage::GameStart) {//changeToGameScene
+			sendAck(std::stoi(words[1]), socket);
+			std::string positions=words[2];
+			for (int i = 0; i < std::stoi(words[2]); i++) {
+				
+				positions +="_"+ words[i * 3 + 3];
+				positions += "_" + words[i*3 + 4];
+				positions += "_" + words[i*3 + 5];
+			}
+			SceneManager::Instance().changeToSceneGame(socket, serverMessages, outMessages, myId, msgId, playerNick, font, positions);
+		} 
 		//if (type == TypeOfMessage::Chat) //aMessages.pushBack(words[1]); check aMessage <= 19;
 
 		serverMessages->pop();

@@ -29,7 +29,7 @@ private:
 	Walls walls;
 	sf::Time timeLastMoveSend;
 public:
-	SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f);
+	SceneGame(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::map<int, outMsg>* outMsg, int& pID, int& msgid, std::string nick, sf::Font f, std::string positions);
 
 	void Update(sf::Time delta );
 	void checkInput(sf::RenderWindow*, sf::Time deltaTime);

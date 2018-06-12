@@ -14,7 +14,7 @@ private:
 public:
 	std::map<int, sf::Vector2f*> food;
 	int foodId;
-	ServerMap(sf::Vector2i);
+	ServerMap(sf::Vector2i,float);
 	void spawnFood();
 
 	bool update(sf::Time delta);

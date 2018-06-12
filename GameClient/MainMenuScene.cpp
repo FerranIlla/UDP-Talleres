@@ -54,10 +54,10 @@ void  MainMenuScene::checkReceivedMsg(sf::RenderWindow*window) {
 		if (type == TypeOfMessage::Ack) {
 			outMessages->erase(std::stoi(words[1]));
 		}
-		/*else if (type == TypeOfMessage::Ping) {
+		else if (type == TypeOfMessage::Ping) {
 			//std::cout << "Ping Recivido";
 			sendNormal(std::to_string(TypeOfMessage::Ping), socket);
-		}*/
+		}
 		//if (type == TypeOfMessage::List)
 		//if (type == TypeOfMessage::Join) //recieve game info
 		//if (type == TypeOfMessage::Error) //cant create or cant join

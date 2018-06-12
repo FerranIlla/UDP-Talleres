@@ -1,8 +1,8 @@
 #include "ServerMap.h"
 
-ServerMap::ServerMap(sf::Vector2i size):Map(size) {
+ServerMap::ServerMap(sf::Vector2i size, float foods):Map(size) {
 	foodId = -1;
-	foodCreationInterval = sf::seconds(5);
+	foodCreationInterval = sf::seconds(foods);
 	spawnFood();
 }
 

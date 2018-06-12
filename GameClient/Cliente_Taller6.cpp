@@ -32,13 +32,9 @@ int main() {
 	int msgId = 0;
 
 	
-	std::cout << "Introduce un nickname:\n	";
-	std::string playerNick;
-	std::cin >> playerNick;
-	sendNew(std::to_string(TypeOfMessage::Hello) + "_" + playerNick, &socket, msgId, &outMessages);
-	std::cout << "nick enviado al servidor\n";
-	
 
+	sendNew(std::to_string(TypeOfMessage::Hello), &socket, msgId, &outMessages);
+	//std::cout << "nick enviado al servidor\n";
 
 	sf::RenderWindow window;
 	window.create(sf::VideoMode(screenDimensions.x, screenDimensions.y), "MegaGame");

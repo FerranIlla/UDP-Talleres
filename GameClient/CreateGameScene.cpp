@@ -86,7 +86,9 @@ void  CreateGameScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 			}
 
 			if (btn_Create->checkClick(mousePos)) {
-				//provisional
+				
+				std::string s = std::to_string(TypeOfMessage::CreateGame) + "_" + std::to_string(msgId) + "_" + std::to_string(numberOfPlayers) + "_" + std::to_string(foodRate);
+				sendNew(s, socket, msgId, outMessages);
 				SceneManager::Instance().changeToRoom(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
 
 				//sendNew(create+"_"+numberOfPlayers+"_"+foodRate...)
@@ -105,10 +107,10 @@ void  CreateGameScene::checkReceivedMsg(sf::RenderWindow*window) {
 		if (type == TypeOfMessage::Ack) {
 			outMessages->erase(std::stoi(words[1]));
 		}
-		/*else if (type == TypeOfMessage::Ping) {
+		else if (type == TypeOfMessage::Ping) {
 		//std::cout << "Ping Recivido";
 		sendNormal(std::to_string(TypeOfMessage::Ping), socket);
-		}*/
+		}
 		//if (type == TypeOfMessage::Join) //recieve game info && changeToGameScene
 		//if (type == TypeOfMessage::Error) //cant create
 

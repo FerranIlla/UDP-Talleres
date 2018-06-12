@@ -34,8 +34,6 @@ LoginScene::LoginScene(sf::UdpSocket* sock, std::queue<std::string>* sMsg, std::
 void LoginScene::Update(sf::Time deltaTime) {
 	btn_Login->update(mousePos);
 	btn_Register->update(mousePos);
-
-	
 }
 
 void LoginScene::checkInput(sf::RenderWindow* window, sf::Time deltaTime) {
@@ -47,17 +45,16 @@ void LoginScene::checkInput(sf::RenderWindow* window, sf::Time deltaTime) {
 			break;
 		case sf::Event::KeyPressed:
 			if (evento.key.code == sf::Keyboard::Return) {
-				if (btn_Login->isSelected() || btn_Register->isSelected()) {
+				if (btn_Login->isSelected()) {
 					if (nicknameInput.getSize() > 0 && passwordInput.getSize() > 0) {
-						std::string msj = "login_" + nicknameInput + "_" + passwordInput; //TODO CANVIAR EL MSJ DEL SEND
-						//sendNew(msj, socket, msgId, outMessages);
-						std::cout << "sending nick\n";
+						std::string msj = std::to_string(TypeOfMessage::Login) + "_" + std::to_string(msgId) + "_" + nicknameInput + "_" + passwordInput; 
+						sendNew(msj, socket, msgId, outMessages);
 
-						//aixo es provisional. S'haura de treure
-						myId = 1;
-						playerNick = nicknameInput;
-						SceneManager::Instance().changeToMenu(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
 					}
+				}
+				else if (btn_Register->isSelected()) {
+					std::string msj = std::to_string(TypeOfMessage::Register) + "_" + std::to_string(msgId) + "_" + nicknameInput + "_" + passwordInput;
+					sendNew(msj, socket, msgId, outMessages);
 				}
 				
 			}
@@ -119,11 +116,32 @@ void LoginScene::checkReceivedMsg(sf::RenderWindow* window) {
 		if (type == TypeOfMessage::Ack) {
 			outMessages->erase(std::stoi(words[1]));
 		}
-		/*else if (type == TypeOfMessage::Ping) {
+		else if (type == TypeOfMessage::Ping) {
 		//std::cout << "Ping Recivido";
 		sendNormal(std::to_string(TypeOfMessage::Ping), socket);
-		}*/
-		//if (type == TypeOfMessage::Hello) //recieve idPlayer, start MainMenuScene
+		}
+		else if (type==TypeOfMessage::Login) {
+			myId = std::stoi(words[2]);
+			playerNick = words[3];
+			std::string s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+			sendNormal(s, socket);
+			SceneManager::Instance().changeToMenu(socket, serverMessages, outMessages, myId, msgId, playerNick, font);
+			std::cout << "Entras\n";
+
+		}
+		else if (type == TypeOfMessage::ErrorRegister) {
+			txt_serverMsg.setString("Nombre de usuario ya existente");
+		}
+		else if (type == TypeOfMessage::ErrorLogin) {
+			txt_serverMsg.setString("Convinacion usuario contraseña incorrecto");
+		}
+		else if (type == TypeOfMessage::Disconnect) {
+			txt_serverMsg.setString("Disconnected from the server");
+		}
+		if (type == TypeOfMessage::Hello) {
+			txt_serverMsg.setString("Connected to the server");
+			outMessages->erase(0);
+		}//recieve idPlayer, start MainMenuScene
 		//if (type == TypeOfMessage::ErrorLogin) //nick or password incorrect
 
 		serverMessages->pop();

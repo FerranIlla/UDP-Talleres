@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(Solutiondir)\GameLib;$(Solutiondir)\deps64\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(Solutiondir)\x64\Debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>$(Solutiondir)\deps64\mysql\include;$(Solutiondir)\GameLib;$(Solutiondir)\deps64\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(Solutiondir)\deps64\mysql\lib\;$(Solutiondir)\x64\Debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -107,13 +107,13 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(Solutiondir)\deps64\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Solutiondir)\deps64\mysql\lib;$(Solutiondir)\deps64\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(Solutiondir)\deps64\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>GameLib.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-network-d.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mysqlcppconn.lib;GameLib.lib;sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-network-d.lib;ws2_32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -157,11 +157,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ClientProxy.cpp" />
+    <ClCompile Include="DBManager.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameList.cpp" />
+    <ClCompile Include="NetworkFunctions.cpp" />
     <ClCompile Include="ServerMap.cpp" />
     <ClCompile Include="Servidor_Taller6.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientProxy.h" />
+    <ClInclude Include="DBManager.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameList.h" />
+    <ClInclude Include="NetworkFunctions.h" />
     <ClInclude Include="ServerMap.h" />
     <ClInclude Include="timeDefines.h" />
   </ItemGroup>

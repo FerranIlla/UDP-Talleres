@@ -10,80 +10,17 @@
 #include "ServerMap.h"
 #include "ClientProxy.h"
 #include "timeDefines.h"
+#include "NetworkFunctions.h"
+#include "DBManager.h"
+#include "GameList.h"
 
-#define MSG_LENGTH 512
 
-#define MaxIdMsg 255;
+#define connexion "tcp://192.168.1.59:3306"
+#define username "root"
+#define pwd "linux123"
+
 std::mutex mu;
 
-typedef outMsgServer outMsg;
-
-
-struct InMsg {
-	std::string msg;
-	Address addr;
-
-	InMsg(std::string s, Address ad) {
-		msg = s;
-		addr = ad;
-	}
-};
-
-
-void myReceiveFunction(sf::UdpSocket *sock, std::queue<InMsg>* msgList, bool* open) {
-	//bool open = true;
-	char data[MSG_LENGTH];
-	std::size_t received;
-	Address addr;
-	while (open) {
-		sf::Socket::Status status = sock->receive(data, MSG_LENGTH, received, addr.ip, addr.port);
-		if (status!=sf::Socket::Status::Done) {
-			//error al recivir
-			mu.lock();
-			std::cout << "Error al recivir" << std::endl;
-			mu.unlock();
-		}
-		else {
-			//procesar el mensaje
-			data[received] = '\0';
-			std::string s = data;
-			InMsg msg(s, addr);
-			mu.lock();
-			//std::cout << data;
-			msgList->push(msg);
-			mu.unlock();
-		}
-
-	}
-};
-
-void sendNew(std::string s, sf::UdpSocket* socket, int &id, Address addr, std::map<int, std::string>* outMessages) {
-	bool errorInSend = false;
-	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
-		errorInSend = (socket->send(&s[0], s.length(), addr.ip, addr.port) != sf::Socket::Done);
-	}
-	else {
-		std::cout << "Paquete perdido. " << std::endl;
-	}
-
-	if(errorInSend) std::cout << "Ha habido un problema al enviar\n";
-	else {
-		outMessages->emplace(id, s);
-		id = (id + 1) % MaxIdMsg;
-	}
-	
-}
-
-void sendNormal(std::string msg, sf::UdpSocket* socket, Address addr) {
-	if (percentageGate(PERCENT_PACKETLOST)) {//si pasa
-		if (socket->send(&msg[0], msg.length(), addr.ip, addr.port) != sf::Socket::Done) {
-			std::cout << "Ha habido un problema al enviar\n";
-		}
-	}
-	else {
-		std::cout << "Paquete perdido." << std::endl;
-	}
-}
 
 
 
@@ -103,27 +40,22 @@ int main() {
 		return 0;
 	}
 
-	std::queue<int> disponiblePlayerIds;
-	disponiblePlayerIds.push(0);
-	disponiblePlayerIds.push(1);
-	disponiblePlayerIds.push(2);
-	disponiblePlayerIds.push(3);
+	DBManager DBman(connexion,username,pwd);
 
 	sf::Clock timer;
 	sf::Time deltaTime;
 	sf::Time lastFrameTime = sf::milliseconds(0);
 
-	sf::Time timeLastSendMoveMsg = sf::milliseconds(0);
+
 	sf::Time timeLastResend = sf::milliseconds(0);
 	sf::Time timeLastPing = sf::milliseconds(0);
 
 	bool open = true;
-	bool gameStarted = false;
-	//cambiar esta variable para cambiar el numero de jugadores necesarios para empezar una partida
-	int numberOfPlayers = 2;
+
+	GameList listGame;
+
 	myThread = std::thread(&myReceiveFunction, &receiveSocket, &msgList, &open); //abrimos el thread para el receive
 
-	ServerMap mapa(sf::Vector2i(800, 600));
 
 
 	//bucle del juego
@@ -149,14 +81,78 @@ int main() {
 				else if (type == TypeOfMessage::Ping) {
 					sendingClient->second.resetPing();
 				}
-				else if (type == TypeOfMessage::Move) {
-					InMsg moveMsg = msg;
-					moveMsgList.push_back(moveMsg);
-					sendingClient->second.setTarget(sf::Vector2f(std::stoi(words[1]), std::stoi(words[2])));
+				else if (type == TypeOfMessage::ListGames) {
+					sendNormal(std::to_string(TypeOfMessage::ListGames) + listGame.getNames(),&socket,msg.addr);
+					sendNormal(std::to_string(TypeOfMessage::Ack) +"_"+ words[1], &socket,msg.addr);
+				}
+				else if (type == TypeOfMessage::JoinGame) {
+					listGame.addPlayerToGame(std::stoi(words[2]),&clients.find(msg.addr)->second);
+				}
+				else if (type == TypeOfMessage::CreateGame) {
+					listGame.AddGame(&clients.find(msg.addr)->second, &socket, std::stoi(words[2]),std::stof(words[3]));
+					sendNormal(std::to_string(TypeOfMessage::Ack) +"_"+words[1], &socket, msg.addr);
+					std::cout << "partidaCreada\n";
+				}
+				else if (type == TypeOfMessage::Login) {
+					std::cout << "Login recibido\n";
+					if (clients.find(msg.addr) != clients.end()) {
+						ClientProxy* logClient =&clients.find(msg.addr)->second;
+						if (logClient->id == -1) {
+							if (DBman.login(words[2], words[3])) {
+								int idLogPlayer=DBman.getPlayerId(words[2]);
+								logClient->id = idLogPlayer;
+								logClient->nickname = words[2];
+								std::string s = std::to_string(TypeOfMessage::Login) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(idLogPlayer) + "_" + words[2];
+								sendNew(s, &socket, idOutMsg, msg.addr, &logClient->outMessages);
+								s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+								sendNormal(s, &socket, msg.addr);
+							}
+							else {
+								std::string s = std::to_string(TypeOfMessage::ErrorLogin) + "_"+std::to_string(idOutMsg);
+								sendNew(s, &socket, idOutMsg, msg.addr, &logClient->outMessages);
+								s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+								sendNormal(s, &socket, msg.addr);
+							}
+						}
+						else {
+							std::string s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+							sendNormal(s, &socket, msg.addr);
+						}
+					}
+
+
+				}
+				else if (type == TypeOfMessage::Register) {
+					std::cout << "intento de registro recibido\n";
+					if (clients.find(msg.addr) != clients.end()) {
+						ClientProxy* logClient = &clients.find(msg.addr)->second;
+						if (logClient->id == -1) {
+							if (DBman.altaCuenta(words[2], words[3])) {
+								int idRegisterPlayer = DBman.getPlayerId(words[2]);
+								logClient->id = idRegisterPlayer;
+								logClient->nickname = words[2];
+								std::string s = std::to_string(TypeOfMessage::Login) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(idRegisterPlayer)+"_"+words[2];
+								sendNew(s, &socket, idOutMsg, msg.addr,&logClient->outMessages);
+								s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+								sendNormal(s, &socket, msg.addr);
+							}
+							else {
+								std::string s = std::to_string(TypeOfMessage::ErrorRegister) + "_" + std::to_string(idOutMsg);
+								sendNew(s, &socket, idOutMsg, msg.addr, &logClient->outMessages);
+								s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+								sendNormal(s, &socket, msg.addr);
+							}
+						}
+						else {
+							std::string s = std::to_string(TypeOfMessage::Ack) + "_" + words[1];
+							sendNormal(s, &socket, msg.addr);
+						}
+					}
+
 				}
 				else if (type == TypeOfMessage::Disconnect) {
 					int id = clients.find(msg.addr)->second.id;
-					disponiblePlayerIds.push(id);
+					//disponiblePlayerIds.push(id);
 					clients.erase(msg.addr);
 					std::cout << "Jugador expulsado\n";
 
@@ -167,7 +163,7 @@ int main() {
 					}
 				}
 				else if (type == TypeOfMessage::Hello) {
-					std::string s = std::to_string(TypeOfMessage::Hello) + "_" + std::to_string(clients.find(msg.addr)->second.id) + "_" + std::to_string(clients.find(msg.addr)->second.pos.x) + "_" + std::to_string((clients.find(msg.addr)->second.pos.y));
+					std::string s = std::to_string(TypeOfMessage::Hello);
 					sendNormal(s, &socket, msg.addr);
 				}
 				//to do responder a un hello que ya tenemos
@@ -178,33 +174,11 @@ int main() {
 #pragma region Non Existing Client
 			else {//si no existe el cliente
 				if (std::stoi(words[0]) == TypeOfMessage::Hello) {
-					if (!gameStarted) {
-						ClientProxy newClient(&mapa, msg.addr, msg.msg, disponiblePlayerIds.front());
-						//
-						for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-							std::string s = std::to_string(TypeOfMessage::NewPlayer) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(disponiblePlayerIds.front()) + "_" + std::to_string(newClient.pos.x) + "_" + std::to_string(newClient.pos.y);
-							sendNew(s, &socket, idOutMsg, (*it).first, &it->second.outMessages);
-							s = std::to_string(TypeOfMessage::NewPlayer) + "_" + std::to_string(idOutMsg) + "_" + std::to_string((*it).second.id) + "_" + std::to_string((*it).second.pos.x) + "_" + std::to_string((*it).second.pos.y);
-							sendNew(s, &socket, idOutMsg, newClient.address, &newClient.outMessages);
-						}
-
-						std::string s = std::to_string(TypeOfMessage::Hello) + "_" + std::to_string(disponiblePlayerIds.front()) + "_" + std::to_string(newClient.pos.x) + "_" + std::to_string(newClient.pos.y);
-						disponiblePlayerIds.pop();
-						sendNormal(s, &socket, newClient.address);
-						clients.emplace(msg.addr, newClient);
-						if (clients.size() == numberOfPlayers) {
-							gameStarted = true;
-							std::cout << "Empieza la partida\n";					
-							for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-								s = std::to_string(TypeOfMessage::GameStart) + "_" + std::to_string(idOutMsg);
-								sendNew(s, &socket, idOutMsg, it->first, &it->second.outMessages);
-								//enviamos la primera comida
-								s = std::to_string(TypeOfMessage::Food) + "_" + std::to_string(idOutMsg) + "_" + std::to_string(mapa.foodId) + "_" + std::to_string(mapa.food.find(mapa.foodId)->second->x) + "_" + std::to_string(mapa.food.find(mapa.foodId)->second->y);
-								sendNew(s, &socket, idOutMsg, it->first, &it->second.outMessages);
-							}
-						}
-
-					}
+					ClientProxy newClient(msg.addr, msg.msg, -1);
+					clients.emplace(msg.addr, newClient);
+					std::string s = std::to_string(TypeOfMessage::Hello);
+					sendNormal(s, &socket, msg.addr);
+					std::cout << "Hello recibido\n";
 				}
 			}
 #pragma endregion
@@ -216,22 +190,10 @@ int main() {
 #pragma endregion
 
 #pragma region
-		//enviar moveMsg
-		timeLastSendMoveMsg += deltaTime;
-		if (!moveMsgList.empty() && timeLastSendMoveMsg > SendMoveMsgTime) {
-			//send last move msg (target)
-			std::vector<std::string> words = commandToWords(moveMsgList.back().msg);
-			std::map<Address, ClientProxy>::iterator sendingClient = clients.find(moveMsgList.back().addr);
-			for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
-				if (it->second.id != sendingClient->second.id) {
-					std::string s = std::to_string(TypeOfMessage::Move) + "_" + std::to_string(sendingClient->second.id) + "_" + words[1] + "_" + words[2];
-					sendNormal(s, &socket, it->first);
-				}
-			}
-			moveMsgList.clear();
-		}
+
 #pragma endregion
 #pragma region Resend
+
 		//reenviar mensajes
 		timeLastResend += deltaTime;
 		if (timeLastResend > ResendTime) {
@@ -261,13 +223,14 @@ int main() {
 				int id = it->second.id;
 				std::map<Address, ClientProxy >::iterator temp = it;
 				it++;
+				sendNormal(std::to_string(Disconnect),&socket,temp->first);
 				clients.erase(temp);
-				disponiblePlayerIds.push(id);
-				for (std::map<Address, ClientProxy>::iterator itB = clients.begin(); itB != clients.end(); ++itB) {
+				//disponiblePlayerIds.push(id);
+				/*for (std::map<Address, ClientProxy>::iterator itB = clients.begin(); itB != clients.end(); ++itB) {
 					std::string s = std::to_string(Disconnect);
 					s = s + "_" + std::to_string(id) + "_" + std::to_string(idOutMsg);
 					sendNew(s, &socket, idOutMsg, (*it).second.address, &it->second.outMessages);
-				}
+				}*/
 			}
 			else {
 				++it;
@@ -276,7 +239,12 @@ int main() {
 #pragma endregion
 
 #pragma region Update
-		if (gameStarted) {
+		listGame.update(deltaTime);
+
+
+
+
+		/*if (gameStarted) {
 			for (std::map <Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
 				if (it->second.isAlive) {
 					it->second.movePlayer(deltaTime.asSeconds());
@@ -312,7 +280,7 @@ int main() {
 		if (clients.size() == 0 && gameStarted) {
 			gameStarted = false;
 			std::cout << "Partida acabada, serverReiniciado\n";
-		}
+		}*/
 #pragma endregion
 
 	}

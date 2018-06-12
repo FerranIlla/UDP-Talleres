@@ -14,6 +14,7 @@ public:
 	Address address; //suposo que no cal perque hi ha el map
 	sf::Time timeSincePing;
 	int id;
+	int idPartida;
 	std::map<int, std::string> outMessages;
 	
 	//movimiento
@@ -21,9 +22,11 @@ public:
 	sf::Vector2f* tail;
 	bool isAlive;
 
-	ClientProxy(ServerMap* map, Address ad, std::string name, int idPlayer);
+	ClientProxy( Address ad, std::string name, int idPlayer);
 
 	void resetPing();
+
+	void SetPosition(sf::Vector2f);
 
 	bool isDisconected(sf::Time deltaTime);
 
@@ -32,7 +35,7 @@ public:
 	void movePlayer(float delta);
 
 	int checkFoodCollision(std::map<int, sf::Vector2f*>&foods);
-	bool checkPlayersCollision(std::map<Address, ClientProxy>&player);
+	bool checkPlayersCollision(std::map<Address, ClientProxy*>&player);
 
 	void grow();
 

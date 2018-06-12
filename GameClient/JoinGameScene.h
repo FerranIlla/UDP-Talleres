@@ -23,6 +23,7 @@ private:
 	bool seeListOfGames;
 	std::vector<std::string> listOfGames;
 	std::vector<Button*> games;
+	std::vector<int> gameIDs;
 
 	Button* btn_Back;
 

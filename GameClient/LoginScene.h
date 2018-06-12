@@ -7,6 +7,7 @@
 #include <queue>
 #include <map>
 #include "SceneManager.h"
+#include "NetworkFunctions.h"
 
 class SceneGame;
 
