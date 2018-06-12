@@ -62,13 +62,13 @@ void  RoomScene::checkInput(sf::RenderWindow*window, sf::Time deltaTime) {
 		case sf::Event::KeyPressed:
 			if (evento.key.code == sf::Keyboard::Return) {
 				message[0] = ' ';
-				std::string msj = "chat_" + message;
-				//socket.send(msj.c_str(), msj.length());
-				//sendNew...
-				aMessages.push_back(playerNick+":"+message);
+				std::string msj = "Chat_" + playerNick + ":" + message;
+				//sendNew(msj, socket, msgId, outMessages); //send to server
+				sendNormal(msj, socket);
+				aMessages.push_back(playerNick + ":" + message);
 				if (aMessages.size() > 19)
 					aMessages.erase(aMessages.begin(), aMessages.begin() + 1);
-				
+
 				message = ">";
 			}
 			break;
@@ -111,8 +111,13 @@ void  RoomScene::checkReceivedMsg(sf::RenderWindow*window) {
 			}
 			SceneManager::Instance().changeToSceneGame(socket, serverMessages, outMessages, myId, msgId, playerNick, font, positions);
 		} 
-		//if (type == TypeOfMessage::Chat) //aMessages.pushBack(words[1]); check aMessage <= 19;
-
+		else if (type == TypeOfMessage::Chat) {
+			aMessages.push_back(words[1]);
+			if (aMessages.size() > 19)
+			{
+				aMessages.erase(aMessages.begin(), aMessages.begin() + 1);
+			}
+		}
 		serverMessages->pop();
 	}
 }

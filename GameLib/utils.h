@@ -25,6 +25,10 @@ struct Address {
 		}
 		return false;
 	}
+
+	friend bool operator== (const Address &lho, const Address &rho) {
+		return (lho.ip == rho.ip && lho.port == rho.port);
+	}
 };
 
 
@@ -78,7 +82,7 @@ sf::Vector2f normalize(sf::Vector2f vec);
 sf::Vector2f rotate(sf::Vector2f vec, float angle);
 
 enum TypeOfMessage :int8_t {
-	Hello, NewPlayer, Ack, Ping, Disconnect, Move, Kill, GameStart, Food, Grow, Login, Register, CreateGame, JoinGame, ErrorLogin, ErrorRegister, ListGames
+	Hello, NewPlayer, Ack, Ping, Disconnect, Move, Kill, GameStart, Food, Grow, Login, Register, CreateGame, JoinGame, ErrorLogin, ErrorRegister, ListGames, Chat
 };
 
 

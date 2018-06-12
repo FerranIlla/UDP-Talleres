@@ -81,6 +81,16 @@ int main() {
 				else if (type == TypeOfMessage::Ping) {
 					sendingClient->second.resetPing();
 				}
+				else if (type == TypeOfMessage::Chat) {
+					//enviar solo a los demas jugadores
+					for (std::map<Address, ClientProxy>::iterator it = clients.begin(); it != clients.end(); ++it) {
+						if ((it->first == msg.addr) == false) {
+							//sendNew(msg.msg, &socket, idOutMsg, (*it).second.address, &it->second.outMessages);
+							sendNormal(msg.msg, &socket, (*it).second.address);
+						}
+
+					}
+				}
 				else if (type == TypeOfMessage::ListGames) {
 					sendNormal(std::to_string(TypeOfMessage::ListGames) + listGame.getNames(),&socket,msg.addr);
 					sendNormal(std::to_string(TypeOfMessage::Ack) +"_"+ words[1], &socket,msg.addr);
